@@ -1,19 +1,18 @@
-using Core.Diagnostics;
 using System;
 using System.Collections.Generic;
 
 namespace UnityEngine.UI
 {
-    [RequireComponent(typeof(RecyclerLayout))]
-    public class HorizontalLayoutRecycler : HorizontalOrVerticalLayoutGroup, IRecyclerLayout
+    [RequireComponent(typeof(LayoutRecycler))]
+    public class HorizontalLayoutRecycler : HorizontalOrVerticalLayoutGroup, IRecyclableLayout
     {
-        [ReadOnly] public RecyclerLayout RecyclerLayout;
+        [ReadOnly] public LayoutRecycler RecyclerLayout;
 
 #if UNITY_EDITOR
         protected override void Reset()
         {
             base.Reset();
-            RecyclerLayout = GetComponent<RecyclerLayout>();
+            RecyclerLayout = GetComponent<LayoutRecycler>();
             RecyclerLayout.LayoutGroup = this;
         }
 #endif
@@ -46,14 +45,14 @@ namespace UnityEngine.UI
             SetChildrenAlongAxisRecycler(1, false);
         }
 
-        public RecyclerLayout GetRecyclerLayout()
+        public LayoutRecycler GetLayoutRecycler()
         {
             return RecyclerLayout;
         }
 
-        // *************************************************************************************************************
+        //==============================================================================================================
         // Recycler calculations
-        // *************************************************************************************************************
+        //==============================================================================================================
         void CalcAlongAxisRecycler(int axis, bool isVertical)
         {
             float totalWidth = 0.0f;
@@ -72,6 +71,11 @@ namespace UnityEngine.UI
 
         public void ManualLayoutBuild()
         {
+        }
+
+        public void ProxyLayoutBuild()
+        {
+            throw new NotImplementedException();
         }
     }
 }

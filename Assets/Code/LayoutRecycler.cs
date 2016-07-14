@@ -3,11 +3,13 @@ using System.Collections;
 using UnityEngine.UI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 public interface IRecyclableLayout
 {
     LayoutRecycler GetLayoutRecycler();
     void ManualLayoutBuild();
+    void ProxyLayoutBuild();
 }
 
 public class LayoutRecycler : MonoBehaviour
@@ -22,24 +24,22 @@ public class LayoutRecycler : MonoBehaviour
 
     // Actual prefab asset reference assigned by user, CellPools mirror this particular asset reference
     public GameObject CellPrefab; 
-    public CellPool CellPool;
+    [ReadOnly] public LayoutGroup LayoutGroup;
+    public List<CellRecord> CellRecords = new List<CellRecord>();
+    public List<RectTransformDimensions> CellRectTransformDimensions = new List<RectTransformDimensions>();
 
-    public LayoutGroup LayoutGroup;
-    //public GameObject CellLayoutProxy; // Evaluate how we want to use this
-
-    public ScrollRecycler ScrollRecycler;
+    [NonSerialized] public ScrollRecycler ScrollRecycler;
+    [NonSerialized] public CellPool CellPool;
+    [NonSerialized] public bool InitializedByManager = false;
 
     static Vector3[] _ViewportWorldCorners = new Vector3[4];
-    [NonSerialized]
-    public bool InitializedByManager = false;
-
-    public List<CellRecord> CellRecords = new List<CellRecord>();
 
     public void AddRecord(CellRecord cellRecord)
     {
         cellRecord.RectTransformDimensions.CopyFromRectTransform((RectTransform)CellPool.CellLayoutProxy.transform); // Watch order of operations here
         cellRecord.RectTransformDimensions.parent = LayoutGroup.transform;
         CellRecords.Add(cellRecord);
+        CellRectTransformDimensions.Add(cellRecord.RectTransformDimensions);
         ScrollRecycler.RecordChangedThisFrame = true;
     }
 
@@ -103,7 +103,7 @@ public class LayoutRecycler : MonoBehaviour
 
                             // Position cell
                             cellInstanceRtx.CopyFromRectTransformDimensions(cellRecord.RectTransformDimensions);
-                            cellInstanceRtx.position = cellRecord.RectTransformDimensions.position;
+                            cellInstanceRtx.position = cellRecord.RectTransformDimensions.parent.TransformPoint(cellRecord.RectTransformDimensions.localPosition);
                             cellInstanceRtx.SetAnchoredPosition3DZ(0.0f);
                             cellInstance.OnCellShow(cellRecord);
                         }
@@ -112,21 +112,21 @@ public class LayoutRecycler : MonoBehaviour
             }
             else
             {
-                // #debug - UNCOMMENT IN SHADOW
-                //Assert.Never(LayoutGroup.gameObject.name + ": ChildCell prefab was null");
+                Assert.Never(LayoutGroup.gameObject.name + ": ChildCell prefab was null");
             }
         }
         else
         {
-            // #debug - UNCOMMENT IN SHADOW
-            //Assert.Never("RecyclerLayout was not instantiated by RecyclerManager, do not use UnityEngine.Object.Instantiate");
+            Assert.Never("RecyclerLayout was not instantiated by RecyclerManager, do not use UnityEngine.Object.Instantiate");
         }
     }
 
     static bool IsRecordVisible(CellRecord cr, RectBounds recyclerBounds)
     {
         Vector2 halfCardSize = cr.RectTransformDimensions.rect.size / 2.0f;
-        Vector2 cardWorldPos = cr.RectTransformDimensions.parent.TransformPoint(cr.RectTransformDimensions.anchoredPosition);
+        Vector2 cardWorldPos = cr.RectTransformDimensions.parent.TransformPoint(
+            cr.RectTransformDimensions.localPosition);
+
         var cardWorldBounds = new RectBounds()
         {
             Top = cardWorldPos.y + halfCardSize.y,
@@ -134,6 +134,28 @@ public class LayoutRecycler : MonoBehaviour
             Right = cardWorldPos.x + halfCardSize.x,
             Left = cardWorldPos.x - halfCardSize.x
         };
+
+        //{// #debug
+        //    Debug.Log("LayoutRecycler.IsRecordVisible() : "
+        //        + "  unit = " + ((CardRecord)cr).unitInstance
+        //        + "  Check = " + (cardWorldBounds.Right >= recyclerBounds.Left && cardWorldBounds.Left <= recyclerBounds.Right && cardWorldBounds.Bottom <= recyclerBounds.Top && cardWorldBounds.Top >= recyclerBounds.Bottom)
+
+        //        + "  cardWorldBounds.Right >= recyclerBounds.Left = " + (cardWorldBounds.Right >= recyclerBounds.Left)
+        //        + "  cardWorldBounds.Left <= recyclerBounds.Right = " + (cardWorldBounds.Left <= recyclerBounds.Right)
+        //        + "  cardWorldBounds.Bottom <= recyclerBounds.Top = " + (cardWorldBounds.Bottom <= recyclerBounds.Top)
+        //        + "  cardWorldBounds.Top >= recyclerBounds.Bottom = " + (cardWorldBounds.Top >= recyclerBounds.Bottom)
+
+        //        + "  cardWorldBounds.Right = " + cardWorldBounds.Right
+        //        + "  cardWorldBounds.Left = " + cardWorldBounds.Left
+        //        + "  cardWorldBounds.Bottom = " + cardWorldBounds.Bottom
+        //        + "  cardWorldBounds.Top = " + cardWorldBounds.Top
+
+        //        + "  recyclerBounds.Left = " + recyclerBounds.Left
+        //        + "  recyclerBounds.Right = " + recyclerBounds.Right
+        //        + "  recyclerBounds.Top = " + recyclerBounds.Top
+        //        + "  recyclerBounds.Bottom = " + recyclerBounds.Bottom);
+        //}
+
 
         return cardWorldBounds.Right >= recyclerBounds.Left
             && cardWorldBounds.Left <= recyclerBounds.Right

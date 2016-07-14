@@ -5,7 +5,7 @@ using System;
 
 public class LibraryPage : MonoBehaviour
 {
-    public const int TestNumber = 1;
+    public const int TestNumber = 2;
 
     public ScrollRecycler ScrollRecycler;
     public GameObject CardSectionPrefab;
@@ -25,16 +25,24 @@ public class LibraryPage : MonoBehaviour
         }
     }
 
+    // #debug - Entire Update is debugging
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            Debug.Break();
+        }
+    }
+
     public CardRecord CreateRecord(string unit)
     {
         CardRecord foundRecord = null;
-        CardRecordsByUnitInstance.TryGetValue(unit, out foundRecord);
 
-        if (foundRecord != null)
+        if (!CardRecordsByUnitInstance.TryGetValue(unit, out foundRecord))
         {
             var cr = new CardRecord();
             cr.Instance = null;
-            cr.unitInstance = "";
+            cr.unitInstance = unit;
 
             CardRecordsByUnitInstance[unit] = cr;
 
@@ -66,7 +74,16 @@ public class LibraryPage : MonoBehaviour
         currLayoutRecycler =
             ScrollRecycler.InstantiateRecyclerLayout(CardSectionPrefab, ScrollRecycler.ScrollRect.content);
 
-        currLayoutRecycler.AddRecord(CreateRecord("apollo"));
+        //currLayoutRecycler.AddRecord(CreateRecord("apollo"));
+        //currLayoutRecycler.AddRecord(CreateRecord("hades"));
+        //currLayoutRecycler.AddRecord(CreateRecord("ganymede"));
+        //currLayoutRecycler.AddRecord(CreateRecord("europa"));
+
+        for (int i = 0; i < 1000; ++i)
+        {
+            currLayoutRecycler.AddRecord(CreateRecord(Guid.NewGuid().ToString()));
+        }
+
 
         // Add records
     }

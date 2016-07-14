@@ -113,6 +113,23 @@ public static class Misc
         return centeredWorldPos;
     }
 
+    public static Vector2 GetRectSize(RectTransform parent, Vector2 sizeDelta, Vector2 anchorMin,
+        Vector2 anchorMax)
+    {
+        Vector3[] parentWorldCorners = new Vector3[4];
+        parent.GetWorldCorners(parentWorldCorners);
+        return GetRectSize(parentWorldCorners, sizeDelta, anchorMin, anchorMax);
+    }
+
+    public static Vector2 GetRectSize(Vector3[] parentWorldCorners, Vector2 sizeDelta, Vector2 anchorMin, 
+        Vector2 anchorMax)
+    {
+        Misc.CornerInfo anchorWorldCorners = Misc.GetAnchorsWorldspaceCorners(parentWorldCorners, anchorMin,
+            anchorMax);
+        Vector2 anchorWorldSize = Misc.GetSizeFromCorners(anchorWorldCorners);
+        return anchorWorldSize + sizeDelta;
+    }
+
     // Rect transformation functions
     //==================================================================================================================
 }

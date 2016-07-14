@@ -1,19 +1,25 @@
-using Core.Diagnostics;
 using System;
 using System.Collections.Generic;
 
 namespace UnityEngine.UI
 {
-    [RequireComponent(typeof(RecyclerLayout))]
-    public class VerticalLayoutRecycler : HorizontalOrVerticalLayoutGroup, IRecyclerLayout
+    [RequireComponent(typeof(LayoutRecycler))]
+    public class VerticalLayoutRecycler : HorizontalOrVerticalLayoutGroup, IRecyclableLayout
     {
-        [ReadOnly] public RecyclerLayout RecyclerLayout;
+        [ReadOnly] public LayoutRecycler RecyclerLayout;
+
+        bool NeedsUnityLayout;
+
+        public LayoutRecycler GetLayoutRecycler()
+        {
+            return RecyclerLayout;
+        }
 
 #if UNITY_EDITOR
         protected override void Reset()
         {
             base.Reset();
-            RecyclerLayout = GetComponent<RecyclerLayout>();
+            RecyclerLayout = GetComponent<LayoutRecycler>();
             RecyclerLayout.LayoutGroup = this;
         }
 #endif
@@ -23,13 +29,39 @@ namespace UnityEngine.UI
             base.Awake();
         }
 
-        public override void CalculateLayoutInputHorizontal() {}
+        //==================================================================================================================
+        // Automatic Layout system functions (Unity)
+        public override void CalculateLayoutInputHorizontal()
+        {
+            if (NeedsUnityLayout)
+            {
+                ManualCalculateLayoutInputHorizontal();
+            }
+        }
 
-        public override void SetLayoutHorizontal() {}
+        public override void SetLayoutHorizontal()
+        {
+            if (NeedsUnityLayout)
+            {
+                ManualCalculateLayoutInputVertical();
+            }
+        }
 
-        public override void CalculateLayoutInputVertical() {}
+        public override void CalculateLayoutInputVertical()
+        {
+            if (NeedsUnityLayout)
+            {
+                NeedsUnityLayout = false;
+            }
+        }
 
         public override void SetLayoutVertical() {}
+
+        // Automatic Layout system functions (Unity)
+        //===============================================================================================================
+
+        //==============================================================================================================
+        // Manual Layout functions
 
         void ManualCalculateLayoutInputHorizontal()
         {
@@ -44,9 +76,6 @@ namespace UnityEngine.UI
         void ManualCalculateLayoutInputVertical()
         {
             CalcAlongAxisRecycler(1, true);
-
-            // NOTE: Doing this additional ForceRebuild for ContentSizeFitter is expensive, find alternate way
-            LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)RecyclerLayout.ScrollRecycler.ScrollRect.content);
         }
 
         void ManualSetLayoutVertical()
@@ -62,14 +91,9 @@ namespace UnityEngine.UI
             ManualSetLayoutVertical();
         }
 
-        public RecyclerLayout GetRecyclerLayout()
-        {
-            return RecyclerLayout;
-        }
+        // Manual Layout functions
+        //==============================================================================================================
 
-        // *************************************************************************************************************
-        // Recycler calculations
-        // *************************************************************************************************************
         void CalcAlongAxisRecycler(int axis, bool isVertical)
         {
             float totalMin = 0.0f;
@@ -84,6 +108,11 @@ namespace UnityEngine.UI
         void SetChildrenAlongAxisRecycler(int axis, bool isVertical)
         {
             LayoutUtil.SetChildrenAlongAxisRecycler(this, this, axis, isVertical);
+        }
+
+        public void ProxyLayoutBuild()
+        {
+            throw new NotImplementedException();
         }
     }
 }

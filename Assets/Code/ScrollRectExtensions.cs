@@ -21,9 +21,8 @@ public static class ScrollRectExtensions
     {
         if ((sr.horizontal && sr.vertical) || (!sr.horizontal && !sr.vertical))
         {
-            // #debug - UNCOMMENT IN SHADOW
-            //MfLog.Error(LC.Trace, "Tried to scroll to a child on a ScrollRect that can scroll both horizontal and "
-            //    + "vertical!");
+            MfLog.Error(LC.Trace, "Tried to scroll to a child on a ScrollRect that can scroll both horizontal and "
+                + "vertical!");
             return contentRtx.anchoredPosition;
         }
 

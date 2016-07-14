@@ -5,15 +5,13 @@ using System.Collections.Generic;
 
 public class CellPool : MonoBehaviour
 {
-    public ScrollRecycler ScrollRecycler;
-    public GameObject CellPrefab;
-    public GameObject CellLayoutProxy; // Evaluate how we want to use this
+    [NonSerialized] public ScrollRecycler ScrollRecycler;
+    [NonSerialized] public GameObject CellPrefab;
+    [NonSerialized] public GameObject CellLayoutProxy; // Evaluate how we want to use this
     public bool AllCellsInstantiated { get { return AllPooledObjects.Count >= RequiredPoolSize; } }
     int RequiredPoolSize;
-    [NonSerialized]
-    public List<GameObject> AllPooledObjects = new List<GameObject>();
-    [NonSerialized]
-    public Stack<GameObject> AvailablePooledObjects = new Stack<GameObject>();
+    [NonSerialized] public List<GameObject> AllPooledObjects = new List<GameObject>();
+    [NonSerialized] public Stack<GameObject> AvailablePooledObjects = new Stack<GameObject>();
     public event Action OnAllObjectsInstantiated;
     bool FirstFrame = true;
 
@@ -79,8 +77,7 @@ public class CellPool : MonoBehaviour
         {
             ++RequiredPoolSize;
 
-            // #debug - UNCOMMENT IN SHADOW
-            //Assert.Never("RequiredPoolSize is not sufficient. Please increase it. Need count:{0}, Prefab Name:{1}", RequiredPoolSize, CellPrefab.name);
+            Assert.Never("RequiredPoolSize is not sufficient. Please increase it. Need count:{0}, Prefab Name:{1}", RequiredPoolSize, CellPrefab.name);
 
             TryInstantiatePendingObject();
             GameObject freeGo = AvailablePooledObjects.Pop();

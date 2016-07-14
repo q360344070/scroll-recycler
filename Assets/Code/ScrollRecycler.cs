@@ -17,6 +17,16 @@ public class ScrollRecycler : MonoBehaviour
         new Dictionary<GameObject, CellPool>();
     [NonSerialized] public bool RecordChangedThisFrame;
 
+    void Awake()
+    {
+        Canvas.willRenderCanvases += RecyclerUpdate;
+    }
+
+    void OnDestroy()
+    {
+        Canvas.willRenderCanvases -= RecyclerUpdate;
+    }
+
     void Reset()
     {
         ScrollRect = GetComponent<ScrollRect>();
@@ -46,7 +56,7 @@ public class ScrollRecycler : MonoBehaviour
         if (!cellPool)
         {
             // InstantiateCellPool()
-            cellPool = ResourceCache.Inst.Create("ui_prefab/CellPool").GetComponent<CellPool>();
+            cellPool = ResourceCache.Inst.Create("CellPool").GetComponent<CellPool>();
             cellPool.gameObject.SetActive(true);
             cellPool.gameObject.name = cellPool.GetType().Name + "[" + prefab.name + "](Clone)";
             cellPool.InitializePool();
@@ -74,20 +84,20 @@ public class ScrollRecycler : MonoBehaviour
         {
             // TODO: Evaluate how we want to use this
             // InstantiateCellLayoutProxy()
-            var layoutProxyRoot = new GameObject();
-            { // Copy the layout elements and rect size of the ScrollRect.content
-                layoutProxyRoot.transform.SetParent(ScrollRect.content, false);
-                var layoutProxyRootRtx = layoutProxyRoot.AddComponent<RectTransform>();
-                layoutProxyRootRtx.CopyFromRectTransform(ScrollRect.content);
-                layoutProxyRoot.AddComponent<LayoutElement>().ignoreLayout = true; // Ignores topmost layout calculations
-                LayoutUtil.DuplicateLayoutElements(ScrollRect.content.gameObject, layoutProxyRoot);
-                layoutProxyRoot.name += "(LayoutProxy)";
-            }
+            //var layoutProxyRoot = new GameObject();
+            //{ // Copy the layout elements and rect size of the ScrollRect.content
+            //    layoutProxyRoot.transform.SetParent(ScrollRect.content, false);
+            //    var layoutProxyRootRtx = layoutProxyRoot.AddComponent<RectTransform>();
+            //    layoutProxyRootRtx.CopyFromRectTransform(ScrollRect.content);
+            //    layoutProxyRoot.AddComponent<LayoutElement>().ignoreLayout = true; // Ignores topmost layout calculations
+            //    LayoutUtil.DuplicateLayoutElements(ScrollRect.content.gameObject, layoutProxyRoot);
+            //    layoutProxyRoot.name += "(LayoutProxy)";
+            //}
 
             cellPool.CellLayoutProxy = Instantiate(recyclerLayout.CellPrefab);
             cellPool.CellLayoutProxy.gameObject.SetActive(true);
             cellPool.CellLayoutProxy.name = recyclerLayout.CellPrefab.name + "(LayoutProxy)";
-            cellPool.CellLayoutProxy.transform.SetParent(layoutProxyRoot.transform, false);
+            cellPool.CellLayoutProxy.transform.SetParent(recyclerLayout.transform, false);
             cellPool.CellLayoutProxy.transform.localPosition = Vector2.zero;
 
             var cellProxyCG = cellPool.CellLayoutProxy.GetComponent<CanvasGroup>();
@@ -164,16 +174,16 @@ public class ScrollRecycler : MonoBehaviour
 
     // NOTE: ScrollRecycler's execution order is set after all other scripts so any logic that changes
     // GameObjects will have already been done by this point
-    void LateUpdate()
+    void RecyclerUpdate()
     {
-        // If a record changed in any of the recyclers, we need to rebuild all of them
+        // Update cell position
+        foreach (CellPool cp in CellPools)
+        {
+            cp.transform.position = ScrollRect.content.position;
+        }
+
         if (RecordChangedThisFrame)
         {
-            // ForceRebuild for proxies
-            LayoutRebuilder.ForceRebuildLayoutImmediate(ScrollRect.content);
-
-            // Calculate the LayoutInput (LayoutDimensions) for RecyclerLayout and LayoutDimensions for records 
-            // using proxy
             foreach (LayoutRecycler lr in RecyclerLayoutPrefabsByRecyclerLayoutInstances.Keys)
             {
                 lr.LayoutGroup.GetComponent<IRecyclableLayout>().ManualLayoutBuild();
@@ -187,12 +197,6 @@ public class ScrollRecycler : MonoBehaviour
         {
             lr.ShowAndPositionVisibleCells();
         }
-
-        // Update cellpool position to reflect the scroll rect content
-        foreach (CellPool cp in CellPools)
-        {
-            cp.transform.position = ScrollRect.content.position;
-        }
     }
 }
 
@@ -201,6 +205,6 @@ public class CellRecord
 {
     public GameObject Instance; // Instantiated gameObject
     public RectTransformDimensions RectTransformDimensions = new RectTransformDimensions();
-    public LayoutDimensions LayoutDimensions = null;
+    //public LayoutDimensions LayoutDimensions = null;
     // TODO Specify if records need more than one Layout calculation per grouping
 }

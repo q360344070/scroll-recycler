@@ -4,14 +4,12 @@ using UnityEngine.UI;
 using System;
 using System.Collections.Generic;
 using UnityEngine.Serialization;
-using Core.Diagnostics;
+using System.Linq;
 
-[RequireComponent(typeof(RecyclerLayout))]
-public class GridLayoutRecycler : LayoutGroup, IRecyclerLayout
+[RequireComponent(typeof(LayoutRecycler))]
+public class GridLayoutRecycler : LayoutGroup, IRecyclableLayout
 {
-    public string childPrefabName;
-
-    [ReadOnly] public RecyclerLayout RecyclerLayout;
+    [ReadOnly] public LayoutRecycler RecyclerLayout;
 
     [SerializeField]
     protected Vector2 m_CellSize = new Vector2(100f, 100f);
@@ -37,7 +35,9 @@ public class GridLayoutRecycler : LayoutGroup, IRecyclerLayout
     [SerializeField]
     protected int m_ConstraintCount = 2;
 
-    public RecyclerLayout GetRecyclerLayout()
+    bool NeedsUnityLayout = true; // #debug - Maybe make into property for IRecyclableLayout
+
+    public LayoutRecycler GetLayoutRecycler()
     {
         return RecyclerLayout;
     }
@@ -46,7 +46,7 @@ public class GridLayoutRecycler : LayoutGroup, IRecyclerLayout
     protected override void Reset()
     {
         base.Reset();
-        RecyclerLayout = GetComponent<RecyclerLayout>();
+        RecyclerLayout = GetComponent<LayoutRecycler>();
         RecyclerLayout.LayoutGroup = this;
     }
 #endif
@@ -56,77 +56,63 @@ public class GridLayoutRecycler : LayoutGroup, IRecyclerLayout
         base.Awake();
     }
 
+    //==================================================================================================================
+    // Automatic Layout system functions (Unity)
+
     // This uses records instead of rect transforms to determine size only, add support for a branch if you
     // want to use existing instantiated rects
-    public override void CalculateLayoutInputHorizontal() {}
+    public override void CalculateLayoutInputHorizontal()
+    {
+        if (NeedsUnityLayout)
+        {
+            ManualCalculateLayoutInputHorizontal();
+        }
+    }
 
-    public override void CalculateLayoutInputVertical() {}
+    public override void CalculateLayoutInputVertical()
+    {
+        if (NeedsUnityLayout)
+        {
+            ManualCalculateLayoutInputVertical();
+        }
+    }
 
-    // This function is called when layout marks for rebuild
-    public override void SetLayoutHorizontal() {}
+    public override void SetLayoutHorizontal()
+    {
+    }
 
-    // This function is called when layout marks for rebuild
-    public override void SetLayoutVertical() {}
-    
+    public override void SetLayoutVertical()
+    {
+        if (NeedsUnityLayout)
+        {
+            NeedsUnityLayout = false;
+        }
+    }
+
+    // Automatic Layout system functions (Unity)
+    //==================================================================================================================
+
+    //==================================================================================================================
+    // Manual Layout functions
+
     public void ManualCalculateLayoutInputHorizontal()
     {
-        int childCount = RecyclerLayout.CellRecords.Count;
-
-        int cols1;
-        int cols2;
-        if (m_Constraint == GridLayoutGroup.Constraint.FixedColumnCount)
-        {
-            cols2 = (cols1 = this.m_ConstraintCount);
-        }
-        else if (this.m_Constraint == GridLayoutGroup.Constraint.FixedRowCount)
-        {
-            cols2 = (cols1 = Mathf.CeilToInt((float)childCount / (float)this.m_ConstraintCount - 0.001f));
-        }
-        else
-        {
-            cols1 = 1;
-            cols2 = Mathf.CeilToInt(Mathf.Sqrt((float)childCount));
-        }
-
-        float minWidth = (float)padding.horizontal + (cellSize.x + spacing.x) * (float)cols1 - spacing.x;
-        float preferredWidth = (float)padding.horizontal + (cellSize.x + spacing.x) * (float)cols2 - spacing.x;
-
-        SetLayoutInputForAxis(minWidth, preferredWidth, -1f, 0);
+        CalcAlongAxisRecycler(0, RecyclerLayout.CellRectTransformDimensions);
     }
 
     public void ManualCalculateLayoutInputVertical()
     {
-        int childCount = RecyclerLayout.CellRecords.Count;
-
-        int rows;
-        if (m_Constraint == GridLayoutGroup.Constraint.FixedColumnCount)
-        {
-            rows = Mathf.CeilToInt((float)childCount / (float)m_ConstraintCount - 0.001f);
-        }
-        else if (m_Constraint == GridLayoutGroup.Constraint.FixedRowCount)
-        {
-            rows = m_ConstraintCount;
-        }
-        else
-        {
-            float x = rectTransform.rect.size.x;
-            int columns = Mathf.Max(1, Mathf.FloorToInt((x - (float)padding.horizontal + spacing.x + 0.001f) / (cellSize.x + spacing.x)));
-            rows = Mathf.CeilToInt((float)childCount / (float)columns);
-        }
-        float height = (float)padding.vertical + (cellSize.y + spacing.y) * (float)rows - spacing.y;
-        SetLayoutInputForAxis(height, height, -1f, 1);
+        CalcAlongAxisRecycler(1, RecyclerLayout.CellRectTransformDimensions);
     }
 
-    // This function is called when layout marks for rebuild
     public void ManualSetLayoutHorizontal()
     {
-        SetCellsAlongAxis(0);
+        SetCellsAlongAxis(0, RecyclerLayout.CellRectTransformDimensions);
     }
 
-    // This function is called when layout marks for rebuild
     public void ManualSetLayoutVertical()
     {
-        SetCellsAlongAxis(1);
+        SetCellsAlongAxis(1, RecyclerLayout.CellRectTransformDimensions);
     }
 
     public void ManualLayoutBuild()
@@ -134,24 +120,95 @@ public class GridLayoutRecycler : LayoutGroup, IRecyclerLayout
         ManualCalculateLayoutInputHorizontal();
         ManualSetLayoutHorizontal();
         ManualCalculateLayoutInputVertical();
-        { // #debug
-            LayoutRebuilder.ForceRebuildLayoutImmediate(RecyclerLayout.ScrollRecycler.ScrollRect.content);
-        }
         ManualSetLayoutVertical();
     }
 
-    private void SetCellsAlongAxis(int axis)
+    // Manual Layout functions
+    //==================================================================================================================
+
+    //==================================================================================================================
+    // Proxy Layout functions
+
+    public void ProxyLayoutBuild()
     {
-        int childCount = RecyclerLayout.CellRecords.Count;
+        List<RectTransformDimensions> childRects = RecyclerLayout.LayoutGroup.transform.Cast<Transform>()
+            .Select(t => new RectTransformDimensions((RectTransform)t)).ToList();
+
+        CalcAlongAxisRecycler(0, childRects);
+        CalcAlongAxisRecycler(1, childRects);
+        SetCellsAlongAxis(0, childRects);
+        SetCellsAlongAxis(1, childRects);
+    }
+
+    // Proxy Layout functions
+    //==================================================================================================================
+
+    public void CalcAlongAxisRecycler(int axis, List<RectTransformDimensions> childRects)
+    {
+        Debug.Log("GridLayoutRecycler.CalcAlongAxisRecycler()");// #debug
+        if (axis == 0)
+        {
+
+            int childCount = childRects.Count;
+
+            int cols1;
+            int cols2;
+            if (m_Constraint == GridLayoutGroup.Constraint.FixedColumnCount)
+            {
+                cols2 = (cols1 = this.m_ConstraintCount);
+            }
+            else if (this.m_Constraint == GridLayoutGroup.Constraint.FixedRowCount)
+            {
+                cols2 = (cols1 = Mathf.CeilToInt((float)childCount / (float)this.m_ConstraintCount - 0.001f));
+            }
+            else
+            {
+                cols1 = 1;
+                cols2 = Mathf.CeilToInt(Mathf.Sqrt((float)childCount));
+            }
+
+            float minWidth = (float)padding.horizontal + (cellSize.x + spacing.x) * (float)cols1 - spacing.x;
+            float preferredWidth = (float)padding.horizontal + (cellSize.x + spacing.x) * (float)cols2 - spacing.x;
+
+            SetLayoutInputForAxis(minWidth, preferredWidth, -1f, 0);
+        }
+        else
+        {
+            int childCount = childRects.Count;
+
+            int rows;
+            if (m_Constraint == GridLayoutGroup.Constraint.FixedColumnCount)
+            {
+                rows = Mathf.CeilToInt((float)childCount / (float)m_ConstraintCount - 0.001f);
+            }
+            else if (m_Constraint == GridLayoutGroup.Constraint.FixedRowCount)
+            {
+                rows = m_ConstraintCount;
+            }
+            else
+            {
+                float x = rectTransform.rect.size.x;
+                int columns = Mathf.Max(1, Mathf.FloorToInt((x - (float)padding.horizontal + spacing.x + 0.001f) / (cellSize.x + spacing.x)));
+                rows = Mathf.CeilToInt((float)childCount / (float)columns);
+            }
+            float height = (float)padding.vertical + (cellSize.y + spacing.y) * (float)rows - spacing.y;
+            SetLayoutInputForAxis(height, height, -1f, 1);
+        }
+    }
+
+
+    private void SetCellsAlongAxis(int axis, List<RectTransformDimensions> childRects)
+    {
+        int childCount = childRects.Count;
 
         if (axis == 0) // Horizontal
         {
             // Adjust the dimensions of child rects when setting along horizontal axis
-            foreach (CellRecord cardRecord in RecyclerLayout.CellRecords)
+            foreach (RectTransformDimensions cardRecord in childRects)
             {
-                cardRecord.RectTransformDimensions.anchorMin = Vector2.up;
-                cardRecord.RectTransformDimensions.anchorMax = Vector2.up;
-                cardRecord.RectTransformDimensions.sizeDelta = cellSize;
+                cardRecord.anchorMin = Vector2.up;
+                cardRecord.anchorMax = Vector2.up;
+                cardRecord.sizeDelta = cellSize;
             }
         }
         else // axis == 1, Vertical
@@ -234,9 +291,9 @@ public class GridLayoutRecycler : LayoutGroup, IRecyclerLayout
                 {
                     spacingCountVert = num7 - 1 - spacingCountVert;
                 }
-                LayoutUtil.SetChildAlongAxis(RecyclerLayout.CellRecords[j].RectTransformDimensions, 0, 
+                LayoutUtil.SetChildAlongAxis(childRects[j], 0, 
                     pos.x + (cellSize[0] + spacing[0]) * (float)spacingCountHoriz, cellSize[0]);
-                LayoutUtil.SetChildAlongAxis(RecyclerLayout.CellRecords[j].RectTransformDimensions, 1, 
+                LayoutUtil.SetChildAlongAxis(childRects[j], 1, 
                     pos.y + (cellSize[1] + spacing[1]) * (float)spacingCountVert, cellSize[1]);
             }
         }
