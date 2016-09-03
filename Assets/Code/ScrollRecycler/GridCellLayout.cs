@@ -6,48 +6,16 @@ using System.Collections.Generic;
 using UnityEngine.Serialization;
 using System.Linq;
 
-[RequireComponent(typeof(LayoutRecycler))]
-public class GridLayoutRecycler : LayoutGroup, IRecyclableLayout
+public class GridCellLayout : GridLayoutGroup, ICellLayout
 {
-    [ReadOnly] public LayoutRecycler RecyclerLayout;
+    [ReadOnly] public CellLayout CellLayoutData;
 
-    [SerializeField]
-    protected Vector2 m_CellSize = new Vector2(100f, 100f);
-    public Vector2 cellSize { get { return m_CellSize; } set { SetProperty<Vector2>(ref m_CellSize, value); } }
-
-    [SerializeField]
-    protected Vector2 m_Spacing = Vector2.zero;
-    public Vector2 spacing { get { return m_Spacing; } set { SetProperty<Vector2>(ref m_Spacing, value); } }
-
-    public int constraintCount { get { return m_ConstraintCount; } set { SetProperty<int>(ref m_ConstraintCount, Mathf.Max(1, value)); } }
-
-    [SerializeField]
-    protected GridLayoutGroup.Corner m_StartCorner;
-    public GridLayoutGroup.Corner startCorner { get { return m_StartCorner; } set { SetProperty<GridLayoutGroup.Corner>(ref m_StartCorner, value); } }
-
-    [SerializeField]
-    protected GridLayoutGroup.Axis m_StartAxis;
-    public GridLayoutGroup.Axis startAxis { get { return m_StartAxis; } set { SetProperty<GridLayoutGroup.Axis>(ref m_StartAxis, value); } }
-
-    [SerializeField]
-    protected GridLayoutGroup.Constraint m_Constraint;
-
-    [SerializeField]
-    protected int m_ConstraintCount = 2;
-
-    bool NeedsUnityLayout = true; // #debug - Maybe make into property for IRecyclableLayout
-
-    public LayoutRecycler GetLayoutRecycler()
-    {
-        return RecyclerLayout;
-    }
+    bool NeedsUnityLayout = true;
 
 #if UNITY_EDITOR
     protected override void Reset()
     {
-        base.Reset();
-        RecyclerLayout = GetComponent<LayoutRecycler>();
-        RecyclerLayout.LayoutGroup = this;
+
     }
 #endif
 
@@ -56,94 +24,7 @@ public class GridLayoutRecycler : LayoutGroup, IRecyclableLayout
         base.Awake();
     }
 
-    //==================================================================================================================
-    // Automatic Layout system functions (Unity)
-
-    // This uses records instead of rect transforms to determine size only, add support for a branch if you
-    // want to use existing instantiated rects
-    public override void CalculateLayoutInputHorizontal()
-    {
-        if (NeedsUnityLayout)
-        {
-            ManualCalculateLayoutInputHorizontal();
-        }
-    }
-
-    public override void CalculateLayoutInputVertical()
-    {
-        if (NeedsUnityLayout)
-        {
-            ManualCalculateLayoutInputVertical();
-        }
-    }
-
-    public override void SetLayoutHorizontal()
-    {
-    }
-
-    public override void SetLayoutVertical()
-    {
-        if (NeedsUnityLayout)
-        {
-            NeedsUnityLayout = false;
-        }
-    }
-
-    // Automatic Layout system functions (Unity)
-    //==================================================================================================================
-
-    //==================================================================================================================
-    // Manual Layout functions
-
-    public void ManualCalculateLayoutInputHorizontal()
-    {
-        CalcAlongAxisRecycler(0, RecyclerLayout.CellRectTransformDimensions);
-    }
-
-    public void ManualCalculateLayoutInputVertical()
-    {
-        CalcAlongAxisRecycler(1, RecyclerLayout.CellRectTransformDimensions);
-    }
-
-    public void ManualSetLayoutHorizontal()
-    {
-        SetCellsAlongAxis(0, RecyclerLayout.CellRectTransformDimensions);
-    }
-
-    public void ManualSetLayoutVertical()
-    {
-        SetCellsAlongAxis(1, RecyclerLayout.CellRectTransformDimensions);
-    }
-
-    public void ManualLayoutBuild()
-    {
-        ManualCalculateLayoutInputHorizontal();
-        ManualSetLayoutHorizontal();
-        ManualCalculateLayoutInputVertical();
-        ManualSetLayoutVertical();
-    }
-
-    // Manual Layout functions
-    //==================================================================================================================
-
-    //==================================================================================================================
-    // Proxy Layout functions
-
-    public void ProxyLayoutBuild()
-    {
-        List<RectTransformDimensions> childRects = RecyclerLayout.LayoutGroup.transform.Cast<Transform>()
-            .Select(t => new RectTransformDimensions((RectTransform)t)).ToList();
-
-        CalcAlongAxisRecycler(0, childRects);
-        CalcAlongAxisRecycler(1, childRects);
-        SetCellsAlongAxis(0, childRects);
-        SetCellsAlongAxis(1, childRects);
-    }
-
-    // Proxy Layout functions
-    //==================================================================================================================
-
-    public void CalcAlongAxisRecycler(int axis, List<RectTransformDimensions> childRects)
+    public void CalcAlongAxisRecycler(int axis, List<RectTransformData> childRects)
     {
         Debug.Log("GridLayoutRecycler.CalcAlongAxisRecycler()");// #debug
         if (axis == 0)
@@ -197,14 +78,14 @@ public class GridLayoutRecycler : LayoutGroup, IRecyclableLayout
     }
 
 
-    private void SetCellsAlongAxis(int axis, List<RectTransformDimensions> childRects)
+    private void SetCellsAlongAxis(int axis, List<RectTransformData> childRects)
     {
         int childCount = childRects.Count;
 
         if (axis == 0) // Horizontal
         {
             // Adjust the dimensions of child rects when setting along horizontal axis
-            foreach (RectTransformDimensions cardRecord in childRects)
+            foreach (RectTransformData cardRecord in childRects)
             {
                 cardRecord.anchorMin = Vector2.up;
                 cardRecord.anchorMax = Vector2.up;
@@ -297,5 +178,84 @@ public class GridLayoutRecycler : LayoutGroup, IRecyclableLayout
                     pos.y + (cellSize[1] + spacing[1]) * (float)spacingCountVert, cellSize[1]);
             }
         }
+    }
+
+    public CellLayout GetCellLayout()
+    {
+        return CellLayoutData;
+    }
+
+    public LayoutGroup GetLayoutGroup()
+    {
+        throw new NotImplementedException();
+    }
+
+    // =========== Automatic Layout system functions (Unity) ===========
+    // This uses records instead of rect transforms to determine size only, add support for a branch if you
+    // want to use existing instantiated rects
+    public override void CalculateLayoutInputHorizontal()
+    {
+        if (NeedsUnityLayout)
+        {
+            ManualCalculateLayoutInputHorizontal();
+        }
+    }
+
+    public override void CalculateLayoutInputVertical()
+    {
+        if (NeedsUnityLayout)
+        {
+            ManualCalculateLayoutInputVertical();
+        }
+    }
+
+    public override void SetLayoutHorizontal()
+    {
+    }
+
+    public override void SetLayoutVertical()
+    {
+        if (NeedsUnityLayout)
+        {
+            NeedsUnityLayout = false;
+        }
+    }
+
+    // =========== Manual Layout functions ===========
+    public void ManualCalculateLayoutInputHorizontal()
+    {
+        CalcAlongAxisRecycler(0, CellLayoutData.AllCellsRectTransformData);
+    }
+
+    public void ManualCalculateLayoutInputVertical()
+    {
+        CalcAlongAxisRecycler(1, CellLayoutData.AllCellsRectTransformData);
+    }
+
+    public void ManualSetLayoutHorizontal()
+    {
+        SetCellsAlongAxis(0, CellLayoutData.AllCellsRectTransformData);
+    }
+
+    public void ManualSetLayoutVertical()
+    {
+        SetCellsAlongAxis(1, CellLayoutData.AllCellsRectTransformData);
+    }
+
+    public void ManualLayoutBuild()
+    {
+        ManualCalculateLayoutInputHorizontal();
+        ManualSetLayoutHorizontal();
+        ManualCalculateLayoutInputVertical();
+        ManualSetLayoutVertical();
+    }
+
+    // =========== Proxy Layout functions ===========
+    public void ProxyLayoutBuild()
+    {
+        CalcAlongAxisRecycler(0, CellLayoutData.AllCellsRectTransformData);
+        CalcAlongAxisRecycler(1, CellLayoutData.AllCellsRectTransformData);
+        SetCellsAlongAxis(0, CellLayoutData.AllCellsRectTransformData);
+        SetCellsAlongAxis(1, CellLayoutData.AllCellsRectTransformData);
     }
 }

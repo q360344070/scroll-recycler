@@ -8,15 +8,15 @@ public class ChatView : MonoBehaviour
 
     void Start()
     {
-        LayoutRecycler lr = ScrollRecycler
-            .InstantiateRecyclerLayout(ChatSectionPrefab, ScrollRecycler.ScrollRect.content);
+        ICellLayout lr = ScrollRecycler
+            .InstantiateCellLayout(ChatSectionPrefab);
 
-        lr.AddRecord(CreateRecord("Lorem ipsum dolor sit amet, consectetur adipiscing elit."));
+        lr.GetCellLayout().AddCell(CreateCellData("Lorem ipsum dolor sit amet, consectetur adipiscing elit."));
     }
 
-    public ChatRecord CreateRecord(string message)
+    public ChatCellData CreateCellData(string message)
     {
-        return new ChatRecord()
+        return new ChatCellData()
         {
             Message = message
         };

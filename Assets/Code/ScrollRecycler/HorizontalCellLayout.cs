@@ -3,19 +3,9 @@ using System.Collections.Generic;
 
 namespace UnityEngine.UI
 {
-    [RequireComponent(typeof(LayoutRecycler))]
-    public class HorizontalLayoutRecycler : HorizontalOrVerticalLayoutGroup, IRecyclableLayout
+    public class HorizontalCellLayout : HorizontalLayoutGroup, ICellLayout
     {
-        [ReadOnly] public LayoutRecycler RecyclerLayout;
-
-#if UNITY_EDITOR
-        protected override void Reset()
-        {
-            base.Reset();
-            RecyclerLayout = GetComponent<LayoutRecycler>();
-            RecyclerLayout.LayoutGroup = this;
-        }
-#endif
+        [ReadOnly] public CellLayout CellLayoutData;
 
         protected override void Awake()
         {
@@ -45,14 +35,7 @@ namespace UnityEngine.UI
             SetChildrenAlongAxisRecycler(1, false);
         }
 
-        public LayoutRecycler GetLayoutRecycler()
-        {
-            return RecyclerLayout;
-        }
-
-        //==============================================================================================================
-        // Recycler calculations
-        //==============================================================================================================
+        // =========== Recycler calculations ===========
         void CalcAlongAxisRecycler(int axis, bool isVertical)
         {
             float totalWidth = 0.0f;
@@ -74,6 +57,16 @@ namespace UnityEngine.UI
         }
 
         public void ProxyLayoutBuild()
+        {
+            throw new NotImplementedException();
+        }
+
+        public CellLayout GetCellLayout()
+        {
+            return CellLayoutData;
+        }
+
+        public LayoutGroup GetLayoutGroup()
         {
             throw new NotImplementedException();
         }

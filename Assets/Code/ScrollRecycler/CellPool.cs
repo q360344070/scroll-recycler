@@ -101,7 +101,7 @@ public class CellPool : MonoBehaviour
             AllPooledObjects.Add(newGo.gameObject);
             AvailablePooledObjects.Push(newGo);
 
-            var newRecyclerCell = newGo.GetComponent<IRecyclerCell>();
+            var newRecyclerCell = newGo.GetComponent<IRecyclableCell>();
             newRecyclerCell.OnCellInstantiate();
 
             if (AllPooledObjects.Count >= RequiredPoolSize)

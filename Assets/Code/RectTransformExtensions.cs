@@ -34,7 +34,7 @@ public static class RectTransformExtensions
         rtx.pivot = other.pivot;
     }
 
-    public static void CopyFromRectTransformDimensions(this RectTransform rtx, RectTransformDimensions rtd)
+    public static void CopyFromRectTransformDimensions(this RectTransform rtx, RectTransformData rtd)
     {
         // NOTE: We skip setting the parent because expensive in Unity
 

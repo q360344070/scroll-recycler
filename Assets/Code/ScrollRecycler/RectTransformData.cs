@@ -3,7 +3,7 @@ using System.Collections;
 using System;
 
 [Serializable]
-public class RectTransformDimensions
+public class RectTransformData
 {
     //==================================================================================================================
     // Observee properties
@@ -164,12 +164,12 @@ public class RectTransformDimensions
 
     RectTransform _observee;
 
-    public RectTransformDimensions()
+    public RectTransformData()
     {
         _observee = null;
     }
 
-    public RectTransformDimensions(RectTransform rtx)
+    public RectTransformData(RectTransform rtx)
     {
         _observee = rtx;
     }

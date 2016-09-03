@@ -6,20 +6,21 @@ using UnityEngine.UI;
 
 public class ScrollRecycler : MonoBehaviour
 {
-    public ScrollRect ScrollRect;
-    public IEnumerable<CellPool> CellPools { get { return CellPoolsByRecyclerLayoutPrefab.Values; } }
-    public IEnumerable<LayoutRecycler> RecyclerLayouts { get { return RecyclerLayoutPrefabsByRecyclerLayoutInstances.Keys; } }
-    // RecyclerLayout instances are mapped to their prefab reference
-    Dictionary<LayoutRecycler, GameObject> RecyclerLayoutPrefabsByRecyclerLayoutInstances = 
-        new Dictionary<LayoutRecycler, GameObject>();
-    // CellPools are mapped to a RecyclerLayout prefab reference
-    Dictionary<GameObject, CellPool> CellPoolsByRecyclerLayoutPrefab =
-        new Dictionary<GameObject, CellPool>();
     [NonSerialized] public bool RecordChangedThisFrame;
+
+    public ScrollRect ScrollRect;
+    public IEnumerable<CellPool> CellPools { get { return CellLayoutPrefabsToCellPools.Values; } }
+    public IEnumerable<GameObject> CellLayoutPrefabs { get { return CellLayoutPrefabsToCellPools.Keys; } }
+    public Vector3[] ViewportWorldCorners = new Vector3[4];
+
+    Dictionary<GameObject, CellPool> CellLayoutPrefabsToCellPools = new Dictionary<GameObject, CellPool>();
+
+    List<ICellLayout> ICellLayouts = new List<ICellLayout>();
 
     void Awake()
     {
         Canvas.willRenderCanvases += RecyclerUpdate;
+        ScrollRect.viewport.GetWorldCorners(ViewportWorldCorners);
     }
 
     void OnDestroy()
@@ -36,49 +37,44 @@ public class ScrollRecycler : MonoBehaviour
         }
     }
 
-    public LayoutRecycler InstantiateRecyclerLayout(LayoutRecycler recycler, Transform parent, int requiredPoolSize = 24)
+    public ICellLayout InstantiateCellLayout(string prefabPath, int requiredPoolSize = 24)
     {
-        return InstantiateRecyclerLayout(recycler.LayoutGroup.gameObject, parent, requiredPoolSize);
-    }
-
-    public LayoutRecycler InstantiateRecyclerLayout(string prefabPath, Transform parent, int requiredPoolSize = 24)
-    {
-        return InstantiateRecyclerLayout(ResourceCache.Inst.Load(prefabPath), parent, requiredPoolSize);
+        return InstantiateCellLayout(ResourceCache.Inst.Load(prefabPath), requiredPoolSize);
     }
 
     // The parent needs to be specified in advance for the CellPool
-    public LayoutRecycler InstantiateRecyclerLayout(GameObject prefab, Transform parent, int requiredPoolSize = 24)
+    public ICellLayout InstantiateCellLayout(GameObject cellLayoutPrefab, int requiredPoolSize = 24)
     {
         // Get or create cell pool
         CellPool cellPool = null;
-        CellPoolsByRecyclerLayoutPrefab.TryGetValue(prefab, out cellPool);
+        CellLayoutPrefabsToCellPools.TryGetValue(cellLayoutPrefab, out cellPool);
 
         if (!cellPool)
         {
             // InstantiateCellPool()
             cellPool = ResourceCache.Inst.Create("CellPool").GetComponent<CellPool>();
             cellPool.gameObject.SetActive(true);
-            cellPool.gameObject.name = cellPool.GetType().Name + "[" + prefab.name + "](Clone)";
+            cellPool.gameObject.name = cellPool.GetType().Name + "[" + cellLayoutPrefab.name + "](Clone)";
             cellPool.InitializePool();
             cellPool.ScrollRecycler = this;
             cellPool.transform.SetParent(ScrollRect.content.parent, false); // Sibling of ScrollRecycler
-            CellPoolsByRecyclerLayoutPrefab[prefab] = cellPool;
+            CellLayoutPrefabsToCellPools[cellLayoutPrefab] = cellPool;
         }
         cellPool.SetRequiredPoolSize(requiredPoolSize);
 
         // Initialize recycler layout
-        GameObject recyclerLayoutGO = UnityEngine.Object.Instantiate(prefab);
-        LayoutRecycler recyclerLayout = recyclerLayoutGO.GetComponent<IRecyclableLayout>().GetLayoutRecycler();
+        GameObject cellLayoutGO = UnityEngine.Object.Instantiate(cellLayoutPrefab);
+        ICellLayout cellLayout = cellLayoutGO.GetComponent<ICellLayout>();
+        CellLayout cellLayoutData = cellLayout.GetCellLayout();
 
-        recyclerLayoutGO.transform.SetParent(parent, false);
-        RecyclerLayoutPrefabsByRecyclerLayoutInstances[recyclerLayout] = prefab;
-        recyclerLayout.CellPool = cellPool;
-        recyclerLayout.ScrollRecycler = this;
-        if (recyclerLayout.CellPool.CellPrefab == null)
+        cellLayoutGO.transform.SetParent(ScrollRect.content, false);
+        cellLayoutData.CellPool = cellPool;
+        cellLayoutData.ScrollRecycler = this;
+        if (cellLayoutData.CellPool.CellPrefab == null)
         {
-            recyclerLayout.CellPool.CellPrefab = recyclerLayout.CellPrefab;
+            cellLayoutData.CellPool.CellPrefab = cellLayoutData.CellPrefab;
         }
-        recyclerLayout.gameObject.SetActive(true);
+        cellLayoutGO.SetActive(true);
 
         if (!cellPool.CellLayoutProxy)
         {
@@ -94,10 +90,10 @@ public class ScrollRecycler : MonoBehaviour
             //    layoutProxyRoot.name += "(LayoutProxy)";
             //}
 
-            cellPool.CellLayoutProxy = Instantiate(recyclerLayout.CellPrefab);
+            cellPool.CellLayoutProxy = Instantiate(cellLayoutData.CellPrefab);
             cellPool.CellLayoutProxy.gameObject.SetActive(true);
-            cellPool.CellLayoutProxy.name = recyclerLayout.CellPrefab.name + "(LayoutProxy)";
-            cellPool.CellLayoutProxy.transform.SetParent(recyclerLayout.transform, false);
+            cellPool.CellLayoutProxy.name = cellLayoutData.CellPrefab.name + "(LayoutProxy)";
+            cellPool.CellLayoutProxy.transform.SetParent(cellLayoutGO.transform, false);
             cellPool.CellLayoutProxy.transform.localPosition = Vector2.zero;
 
             var cellProxyCG = cellPool.CellLayoutProxy.GetComponent<CanvasGroup>();
@@ -114,16 +110,14 @@ public class ScrollRecycler : MonoBehaviour
             }
         }
 
-        recyclerLayout.InitializedByManager = true;
-
-        return recyclerLayout;
+        return cellLayout;
     }
 
     // NOTE: Using a counter is faster, but bug prone if user staggers pool instantiation
     public bool AllCellsInstantiated()
     {
         bool allPoolsInstantiated = true;
-        foreach (CellPool pool in CellPoolsByRecyclerLayoutPrefab.Values)
+        foreach (CellPool pool in CellPools)
         {
             if (!pool.AllCellsInstantiated)
             {
@@ -136,19 +130,17 @@ public class ScrollRecycler : MonoBehaviour
 
     public void ClearRecyclerLayouts()
     {
-        foreach (LayoutRecycler layout in RecyclerLayoutPrefabsByRecyclerLayoutInstances.Keys)
+        foreach (ICellLayout layout in ICellLayouts)
         {
             if (layout != null)
             {
-                layout.LayoutGroup.transform.SetParent(null);
-                UnityEngine.Object.Destroy(layout.LayoutGroup.gameObject);
+                layout.GetLayoutGroup().transform.SetParent(null);
+                UnityEngine.Object.Destroy(layout.GetLayoutGroup().gameObject);
             }
         }
 
-        RecyclerLayoutPrefabsByRecyclerLayoutInstances.Clear();
-
         // Return all cells to pools
-        foreach (CellPool pool in CellPoolsByRecyclerLayoutPrefab.Values)
+        foreach (CellPool pool in CellPools)
         {
             if (pool)
             {
@@ -157,7 +149,7 @@ public class ScrollRecycler : MonoBehaviour
         }        
     }
 
-    public void ScrollToRecord(CellRecord record)
+    public void ScrollToRecord(CellData record)
     {
         if (record != null
             && record.RectTransformDimensions != null
@@ -184,16 +176,16 @@ public class ScrollRecycler : MonoBehaviour
 
         if (RecordChangedThisFrame)
         {
-            foreach (LayoutRecycler lr in RecyclerLayoutPrefabsByRecyclerLayoutInstances.Keys)
+            foreach (ICellLayout iCellLayout in ICellLayouts)
             {
-                lr.LayoutGroup.GetComponent<IRecyclableLayout>().ManualLayoutBuild();
+                iCellLayout.ManualLayoutBuild();
             }
 
             RecordChangedThisFrame = false;
         }
 
         // Place records that should be visible, move off-screen records out of view
-        foreach (LayoutRecycler lr in RecyclerLayoutPrefabsByRecyclerLayoutInstances.Keys)
+        foreach (CellLayout lr in ICellLayouts)
         {
             lr.ShowAndPositionVisibleCells();
         }
@@ -201,10 +193,17 @@ public class ScrollRecycler : MonoBehaviour
 }
 
 [Serializable]
-public class CellRecord
+public class CellData
 {
     public GameObject Instance; // Instantiated gameObject
-    public RectTransformDimensions RectTransformDimensions = new RectTransformDimensions();
+    public RectTransformData RectTransformDimensions = new RectTransformData();
     //public LayoutDimensions LayoutDimensions = null;
     // TODO Specify if records need more than one Layout calculation per grouping
+}
+
+public interface ICellLayout
+{
+    CellLayout GetCellLayout();
+    LayoutGroup GetLayoutGroup();
+    void ManualLayoutBuild();
 }

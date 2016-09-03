@@ -3,7 +3,7 @@ using System.Collections;
 using System;
 using UnityEngine.UI;
 
-public class ChatItem : MonoBehaviour, IRecyclerCell
+public class ChatItem : MonoBehaviour, IRecyclableCell
 {
     public Text Message;
 
@@ -11,14 +11,14 @@ public class ChatItem : MonoBehaviour, IRecyclerCell
     {
     }
 
-    public void OnCellShow(CellRecord cellRecord)
+    public void OnCellShow(CellData cellRecord)
     {
-        var cr = (ChatRecord)cellRecord;
+        var cr = (ChatCellData)cellRecord;
         Message.text = cr.Message;
     }
 }
 
-public class ChatRecord : CellRecord
+public class ChatCellData : CellData
 {
     public string Message;
 }
