@@ -6,8 +6,6 @@ using UnityEngine.UI;
 
 public class ScrollRecycler : MonoBehaviour
 {
-    [NonSerialized] public bool RecordChangedThisFrame;
-
     public ScrollRect ScrollRect;
     public IEnumerable<CellPool> CellPools { get { return CellLayoutPrefabsToCellPools.Values; } }
     public IEnumerable<GameObject> CellLayoutPrefabs { get { return CellLayoutPrefabsToCellPools.Keys; } }
@@ -19,13 +17,11 @@ public class ScrollRecycler : MonoBehaviour
 
     void Awake()
     {
-        Canvas.willRenderCanvases += RecyclerUpdate;
         ScrollRect.viewport.GetWorldCorners(ViewportWorldCorners);
     }
 
     void OnDestroy()
     {
-        Canvas.willRenderCanvases -= RecyclerUpdate;
     }
 
     void Reset()
@@ -64,8 +60,9 @@ public class ScrollRecycler : MonoBehaviour
 
         // Initialize recycler layout
         GameObject cellLayoutGO = UnityEngine.Object.Instantiate(cellLayoutPrefab);
-        ICellLayout cellLayout = cellLayoutGO.GetComponent<ICellLayout>();
-        CellLayout cellLayoutData = cellLayout.GetCellLayout();
+        ICellLayout iCellLayout = cellLayoutGO.GetComponent<ICellLayout>();
+        CellLayout cellLayoutData = iCellLayout.GetCellLayout();
+        ICellLayouts.Add(iCellLayout);
 
         cellLayoutGO.transform.SetParent(ScrollRect.content, false);
         cellLayoutData.CellPool = cellPool;
@@ -110,7 +107,7 @@ public class ScrollRecycler : MonoBehaviour
             }
         }
 
-        return cellLayout;
+        return iCellLayout;
     }
 
     // NOTE: Using a counter is faster, but bug prone if user staggers pool instantiation
@@ -152,21 +149,20 @@ public class ScrollRecycler : MonoBehaviour
     public void ScrollToRecord(CellData record)
     {
         if (record != null
-            && record.RectTransformDimensions != null
-            && record.RectTransformDimensions.parent != null)
+            && record.RectTransformData != null
+            && record.RectTransformData.parent != null)
         {
-            Vector3 unitWorldPos = record.RectTransformDimensions.parent
-                .TransformPoint(record.RectTransformDimensions.anchoredPosition);
+            Vector3 unitWorldPos = record.RectTransformData.parent
+                .TransformPoint(record.RectTransformData.anchoredPosition);
 
             // NOTE: FIX THIS TO NOT USE SIZE DELTA NOW WE HAVE ANCHORED -> WORLD TRANSFORM
-            ScrollRect.ScrollToChild(unitWorldPos, record.RectTransformDimensions.sizeDelta,
-                record.RectTransformDimensions.pivot);
+            ScrollRect.ScrollToChild(unitWorldPos, record.RectTransformData.sizeDelta,
+                record.RectTransformData.pivot);
         }
     }
 
-    // NOTE: ScrollRecycler's execution order is set after all other scripts so any logic that changes
-    // GameObjects will have already been done by this point
-    void RecyclerUpdate()
+    // NOTE: ScrollRecycler's execution order is set after all other scripts
+    void LateUpdate()
     {
         // Update cell position
         foreach (CellPool cp in CellPools)
@@ -174,20 +170,21 @@ public class ScrollRecycler : MonoBehaviour
             cp.transform.position = ScrollRect.content.position;
         }
 
-        if (RecordChangedThisFrame)
+        foreach (ICellLayout iCellLayout in ICellLayouts)
         {
-            foreach (ICellLayout iCellLayout in ICellLayouts)
+            CellLayout cl = iCellLayout.GetCellLayout();
+            if (cl.LayoutNeedsRebuild)
             {
                 iCellLayout.ManualLayoutBuild();
+                cl.LayoutNeedsRebuild = false;
             }
-
-            RecordChangedThisFrame = false;
         }
 
         // Place records that should be visible, move off-screen records out of view
-        foreach (CellLayout lr in ICellLayouts)
+        foreach (ICellLayout icl in ICellLayouts)
         {
-            lr.ShowAndPositionVisibleCells();
+            CellLayout cl = icl.GetCellLayout();
+            cl.ShowAndPositionVisibleCells();
         }
     }
 }
@@ -196,14 +193,7 @@ public class ScrollRecycler : MonoBehaviour
 public class CellData
 {
     public GameObject Instance; // Instantiated gameObject
-    public RectTransformData RectTransformDimensions = new RectTransformData();
+    public RectTransformData RectTransformData = new RectTransformData();
     //public LayoutDimensions LayoutDimensions = null;
     // TODO Specify if records need more than one Layout calculation per grouping
-}
-
-public interface ICellLayout
-{
-    CellLayout GetCellLayout();
-    LayoutGroup GetLayoutGroup();
-    void ManualLayoutBuild();
 }

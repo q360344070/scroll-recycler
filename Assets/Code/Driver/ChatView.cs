@@ -8,17 +8,9 @@ public class ChatView : MonoBehaviour
 
     void Start()
     {
-        ICellLayout lr = ScrollRecycler
-            .InstantiateCellLayout(ChatSectionPrefab);
-
-        lr.GetCellLayout().AddCell(CreateCellData("Lorem ipsum dolor sit amet, consectetur adipiscing elit."));
-    }
-
-    public ChatCellData CreateCellData(string message)
-    {
-        return new ChatCellData()
-        {
-            Message = message
-        };
+        ScrollRecycler
+            .InstantiateCellLayout(ChatSectionPrefab)
+            .GetCellLayout().AddCells(
+                new ChatCellData() { Message = "Lorem ipsum dolor sit amet, consectetur adipiscing elit." });
     }
 }

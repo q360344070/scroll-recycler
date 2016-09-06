@@ -12,13 +12,6 @@ public class GridCellLayout : GridLayoutGroup, ICellLayout
 
     bool NeedsUnityLayout = true;
 
-#if UNITY_EDITOR
-    protected override void Reset()
-    {
-
-    }
-#endif
-
     protected override void Awake()
     {
         base.Awake();
@@ -29,7 +22,6 @@ public class GridCellLayout : GridLayoutGroup, ICellLayout
         Debug.Log("GridLayoutRecycler.CalcAlongAxisRecycler()");// #debug
         if (axis == 0)
         {
-
             int childCount = childRects.Count;
 
             int cols1;
@@ -172,9 +164,9 @@ public class GridCellLayout : GridLayoutGroup, ICellLayout
                 {
                     spacingCountVert = num7 - 1 - spacingCountVert;
                 }
-                LayoutUtil.SetChildAlongAxis(childRects[j], 0, 
+                RecyclerUtil.SetChildAlongAxis(childRects[j], 0, 
                     pos.x + (cellSize[0] + spacing[0]) * (float)spacingCountHoriz, cellSize[0]);
-                LayoutUtil.SetChildAlongAxis(childRects[j], 1, 
+                RecyclerUtil.SetChildAlongAxis(childRects[j], 1, 
                     pos.y + (cellSize[1] + spacing[1]) * (float)spacingCountVert, cellSize[1]);
             }
         }
@@ -187,7 +179,7 @@ public class GridCellLayout : GridLayoutGroup, ICellLayout
 
     public LayoutGroup GetLayoutGroup()
     {
-        throw new NotImplementedException();
+        return this;
     }
 
     // =========== Automatic Layout system functions (Unity) ===========
@@ -224,22 +216,22 @@ public class GridCellLayout : GridLayoutGroup, ICellLayout
     // =========== Manual Layout functions ===========
     public void ManualCalculateLayoutInputHorizontal()
     {
-        CalcAlongAxisRecycler(0, CellLayoutData.AllCellsRectTransformData);
+        CalcAlongAxisRecycler(0, CellLayoutData.CellRecordsRectTransformData);
     }
 
     public void ManualCalculateLayoutInputVertical()
     {
-        CalcAlongAxisRecycler(1, CellLayoutData.AllCellsRectTransformData);
+        CalcAlongAxisRecycler(1, CellLayoutData.CellRecordsRectTransformData);
     }
 
     public void ManualSetLayoutHorizontal()
     {
-        SetCellsAlongAxis(0, CellLayoutData.AllCellsRectTransformData);
+        SetCellsAlongAxis(0, CellLayoutData.CellRecordsRectTransformData);
     }
 
     public void ManualSetLayoutVertical()
     {
-        SetCellsAlongAxis(1, CellLayoutData.AllCellsRectTransformData);
+        SetCellsAlongAxis(1, CellLayoutData.CellRecordsRectTransformData);
     }
 
     public void ManualLayoutBuild()
@@ -253,9 +245,9 @@ public class GridCellLayout : GridLayoutGroup, ICellLayout
     // =========== Proxy Layout functions ===========
     public void ProxyLayoutBuild()
     {
-        CalcAlongAxisRecycler(0, CellLayoutData.AllCellsRectTransformData);
-        CalcAlongAxisRecycler(1, CellLayoutData.AllCellsRectTransformData);
-        SetCellsAlongAxis(0, CellLayoutData.AllCellsRectTransformData);
-        SetCellsAlongAxis(1, CellLayoutData.AllCellsRectTransformData);
+        CalcAlongAxisRecycler(0, CellLayoutData.CellRecordsRectTransformData);
+        CalcAlongAxisRecycler(1, CellLayoutData.CellRecordsRectTransformData);
+        SetCellsAlongAxis(0, CellLayoutData.CellRecordsRectTransformData);
+        SetCellsAlongAxis(1, CellLayoutData.CellRecordsRectTransformData);
     }
 }

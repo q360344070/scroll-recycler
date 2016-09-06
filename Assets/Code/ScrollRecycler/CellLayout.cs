@@ -1,32 +1,42 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 using System;
+using UnityEngine.UI;
 
 // Used for fields and methods on the CellLayouts because inheritance is messy with Unity's interfaces
 [Serializable]
 public class CellLayout
 {
     public GameObject CellPrefab;
-    public List<CellData> AllCellsData = new List<CellData>();
-    public List<RectTransformData> AllCellsRectTransformData = new List<RectTransformData>();
+    public List<CellData> CellRecords = new List<CellData>();
+    public List<RectTransformData> CellRecordsRectTransformData = new List<RectTransformData>();
     public CellPool CellPool;
     public ICellLayout ICellLayout;
-    public bool RecordChangedThisFrame;
+    public bool LayoutNeedsRebuild;
     public ScrollRecycler ScrollRecycler;
+
+    public void AddCells(params CellData[] cellRecords)
+    {
+        foreach (CellData cellData in cellRecords)
+        {
+            AddCell(cellData);
+        }
+    }
 
     public void AddCell(CellData cellRecord)
     {
-        cellRecord.RectTransformDimensions.CopyFromRectTransform((RectTransform)CellPool.CellLayoutProxy.transform); // Watch order of operations here
-        cellRecord.RectTransformDimensions.parent = ICellLayout.GetLayoutGroup().transform;
-        AllCellsData.Add(cellRecord);
-        RecordChangedThisFrame = true;
+        cellRecord.RectTransformData.CopyFromRectTransform((RectTransform)CellPool.CellLayoutProxy.transform); // Watch order of operations here
+        cellRecord.RectTransformData.parent = ICellLayout.GetLayoutGroup().transform;
+        CellRecords.Add(cellRecord);
+        CellRecordsRectTransformData.Add(cellRecord.RectTransformData);
+        LayoutNeedsRebuild = true;
     }
 
     static bool IsRecordVisible(CellData cr, RectBounds recyclerBounds)
     {
-        Vector2 halfCardSize = cr.RectTransformDimensions.rect.size / 2.0f;
-        Vector2 cardWorldPos = cr.RectTransformDimensions.parent.TransformPoint(
-            cr.RectTransformDimensions.localPosition);
+        Vector2 halfCardSize = cr.RectTransformData.rect.size / 2.0f;
+        Vector2 cardWorldPos = cr.RectTransformData.parent.TransformPoint(
+            cr.RectTransformData.localPosition);
 
         var cardWorldBounds = new RectBounds()
         {
@@ -35,28 +45,6 @@ public class CellLayout
             Right = cardWorldPos.x + halfCardSize.x,
             Left = cardWorldPos.x - halfCardSize.x
         };
-
-        //{// #debug
-        //    Debug.Log("LayoutRecycler.IsRecordVisible() : "
-        //        + "  unit = " + ((CardRecord)cr).unitInstance
-        //        + "  Check = " + (cardWorldBounds.Right >= recyclerBounds.Left && cardWorldBounds.Left <= recyclerBounds.Right && cardWorldBounds.Bottom <= recyclerBounds.Top && cardWorldBounds.Top >= recyclerBounds.Bottom)
-
-        //        + "  cardWorldBounds.Right >= recyclerBounds.Left = " + (cardWorldBounds.Right >= recyclerBounds.Left)
-        //        + "  cardWorldBounds.Left <= recyclerBounds.Right = " + (cardWorldBounds.Left <= recyclerBounds.Right)
-        //        + "  cardWorldBounds.Bottom <= recyclerBounds.Top = " + (cardWorldBounds.Bottom <= recyclerBounds.Top)
-        //        + "  cardWorldBounds.Top >= recyclerBounds.Bottom = " + (cardWorldBounds.Top >= recyclerBounds.Bottom)
-
-        //        + "  cardWorldBounds.Right = " + cardWorldBounds.Right
-        //        + "  cardWorldBounds.Left = " + cardWorldBounds.Left
-        //        + "  cardWorldBounds.Bottom = " + cardWorldBounds.Bottom
-        //        + "  cardWorldBounds.Top = " + cardWorldBounds.Top
-
-        //        + "  recyclerBounds.Left = " + recyclerBounds.Left
-        //        + "  recyclerBounds.Right = " + recyclerBounds.Right
-        //        + "  recyclerBounds.Top = " + recyclerBounds.Top
-        //        + "  recyclerBounds.Bottom = " + recyclerBounds.Bottom);
-        //}
-
 
         return cardWorldBounds.Right >= recyclerBounds.Left
             && cardWorldBounds.Left <= recyclerBounds.Right
@@ -98,9 +86,9 @@ public class CellLayout
             new Vector3(recyclerBounds.Left, recyclerBounds.Bottom, 0.0f), Color.green);
 #endif
 
-        for (int i = 0; i < AllCellsData.Count; ++i) // Optimization: use 2D List grouping records by content space position
+        for (int i = 0; i < CellRecords.Count; ++i) // Optimization: use 2D List grouping records by content space position
         {
-            CellData cellRecord = AllCellsData[i];
+            CellData cellRecord = CellRecords[i];
 
             // If that unit was active and we should cull it, return to pool
             if (cellRecord.Instance != null && !IsRecordVisible(cellRecord, recyclerBounds))
@@ -110,9 +98,9 @@ public class CellLayout
             }
         }
 
-        for (int i = 0; i < AllCellsData.Count; ++i) // Optimization: use 2D List grouping records by content space position
+        for (int i = 0; i < CellRecords.Count; ++i) // Optimization: use 2D List grouping records by content space position
         {
-            CellData cellRecord = AllCellsData[i];
+            CellData cellRecord = CellRecords[i];
 
             // If that unit was not active and we should show it, find a free pool unit, init and position
             if (cellRecord.Instance == null && IsRecordVisible(cellRecord, recyclerBounds))
@@ -125,8 +113,8 @@ public class CellLayout
                     var cellInstanceRtx = ((RectTransform)cellRecord.Instance.transform);
 
                     // Position cell
-                    cellInstanceRtx.CopyFromRectTransformDimensions(cellRecord.RectTransformDimensions);
-                    cellInstanceRtx.position = cellRecord.RectTransformDimensions.parent.TransformPoint(cellRecord.RectTransformDimensions.localPosition);
+                    cellInstanceRtx.CopyFromRectTransformDimensions(cellRecord.RectTransformData);
+                    cellInstanceRtx.position = cellRecord.RectTransformData.parent.TransformPoint(cellRecord.RectTransformData.localPosition);
                     cellInstanceRtx.SetAnchoredPosition3DZ(0.0f);
                     cellInstance.OnCellShow(cellRecord);
                 }
@@ -143,3 +131,11 @@ public class CellLayout
         public float Left;
     }
 }
+
+public interface ICellLayout
+{
+    CellLayout GetCellLayout();
+    LayoutGroup GetLayoutGroup();
+    void ManualLayoutBuild();
+}
+

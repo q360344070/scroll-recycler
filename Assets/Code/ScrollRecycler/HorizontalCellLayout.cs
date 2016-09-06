@@ -42,23 +42,18 @@ namespace UnityEngine.UI
             float totalHeight = 0.0f;
             float totalFlexible = 0.0f;
 
-            LayoutUtil.CalcAlongAxisRecycler(this, this, axis, isVertical, ref totalWidth, ref totalHeight,
+            RecyclerUtil.CalculateCellLayoutInput(this, this, axis, isVertical, ref totalWidth, ref totalHeight,
                 ref totalFlexible);
             SetLayoutInputForAxis(totalWidth, totalHeight, totalFlexible, axis);
         }
 
         void SetChildrenAlongAxisRecycler(int axis, bool isVertical)
         {
-            LayoutUtil.SetChildrenAlongAxisRecycler(this, this, axis, isVertical);
+            RecyclerUtil.SetAllCellsDimensionsAlongCellLayout(this, this, axis, isVertical);
         }
 
         public void ManualLayoutBuild()
         {
-        }
-
-        public void ProxyLayoutBuild()
-        {
-            throw new NotImplementedException();
         }
 
         public CellLayout GetCellLayout()
@@ -68,7 +63,7 @@ namespace UnityEngine.UI
 
         public LayoutGroup GetLayoutGroup()
         {
-            throw new NotImplementedException();
+            return this;
         }
     }
 }

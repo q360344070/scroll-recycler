@@ -12,6 +12,7 @@ namespace UnityEngine.UI
         protected override void Awake()
         {
             base.Awake();
+            CellLayout.ICellLayout = this;
         }
 
         public CellLayout GetCellLayout()
@@ -24,25 +25,26 @@ namespace UnityEngine.UI
             return this;
         }
 
-        void CalcAlongAxisRecycler(int axis, bool isVertical)
+        void CalculateCellLayoutInput(int axis, bool isVertical)
         {
             float totalMin = 0.0f;
             float totalPreferred = 0.0f;
             float totalFlexible = 0.0f;
 
-            LayoutUtil.CalcAlongAxisRecycler(this, this, axis, isVertical, ref totalMin, ref totalPreferred,
+            RecyclerUtil.CalculateCellLayoutInput(
+                this,
+                this,
+                axis,
+                isVertical,
+                ref totalMin,
+                ref totalPreferred,
                 ref totalFlexible);
             SetLayoutInputForAxis(totalMin, totalPreferred, totalFlexible, axis);
         }
 
-        void SetChildrenAlongAxisRecycler(int axis, bool isVertical)
+        void SetCellsDimensionsAlongCellLayout(int axis, bool isVertical)
         {
-            LayoutUtil.SetChildrenAlongAxisRecycler(this, this, axis, isVertical);
-        }
-
-        public void ProxyLayoutBuild()
-        {
-            throw new NotImplementedException();
+            RecyclerUtil.SetAllCellsDimensionsAlongCellLayout(this, this, axis, isVertical);
         }
 
         // ============ Automatic Layout system functions (Unity) ============
@@ -75,22 +77,22 @@ namespace UnityEngine.UI
         // =========== Manual Layout functions ===========
         void ManualCalculateLayoutInputHorizontal()
         {
-            CalcAlongAxisRecycler(0, true);
+            CalculateCellLayoutInput(0, true);
         }
 
         void ManualSetLayoutHorizontal()
         {
-            SetChildrenAlongAxisRecycler(0, true);
+            SetCellsDimensionsAlongCellLayout(0, true);
         }
 
         void ManualCalculateLayoutInputVertical()
         {
-            CalcAlongAxisRecycler(1, true);
+            CalculateCellLayoutInput(1, true);
         }
 
         void ManualSetLayoutVertical()
         {
-            SetChildrenAlongAxisRecycler(1, true);
+            SetCellsDimensionsAlongCellLayout(1, true);
         }
 
         public void ManualLayoutBuild()
