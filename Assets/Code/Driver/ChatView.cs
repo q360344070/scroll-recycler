@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// Test commit
+
 public class ChatView : MonoBehaviour
 {
     public ScrollRecycler ScrollRecycler;
