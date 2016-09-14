@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 // Used for fields and methods on the CellLayouts because inheritance is messy with Unity's interfaces
 [Serializable]
-public class CellLayout
+public class CellLayoutArbitrary
 {
     public GameObject CellPrefab;
     public List<CellData> CellRecords = new List<CellData>();
@@ -13,7 +13,7 @@ public class CellLayout
     public CellPool CellPool;
     public ICellLayout ICellLayout;
     public bool LayoutNeedsRebuild;
-    public ScrollRecycler ScrollRecycler;
+    public ScrollRecyclerArbitrary ScrollRecycler;
 
     public void AddCells(params CellData[] cellRecords)
     {
@@ -134,7 +134,7 @@ public class CellLayout
 
 public interface ICellLayout
 {
-    CellLayout GetCellLayout();
+    CellLayoutArbitrary GetCellLayout();
     LayoutGroup GetLayoutGroup();
     void ManualLayoutBuild();
 }

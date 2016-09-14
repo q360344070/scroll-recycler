@@ -3,7 +3,7 @@ using System.Collections;
 
 public class ChatView : MonoBehaviour
 {
-    public ScrollRecycler ScrollRecycler;
+    public ScrollRecyclerArbitrary ScrollRecycler;
     public GameObject ChatSectionPrefab;
 
     void Start()

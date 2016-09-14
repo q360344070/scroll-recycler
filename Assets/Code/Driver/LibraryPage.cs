@@ -5,7 +5,7 @@ using System;
 
 public class LibraryPage : MonoBehaviour
 {
-    public ScrollRecycler ScrollRecycler;
+    public ScrollRecyclerArbitrary ScrollRecycler;
     public GameObject CardSectionPrefab;
     public Dictionary<string, CardRecord> CardRecordsByUnitInstance = new Dictionary<string, CardRecord>();
 
