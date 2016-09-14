@@ -211,7 +211,7 @@ public static class RecyclerUtil
             if (currRect.LayoutDimensions == null)
             {
                 currRect.LayoutDimensions =
-                    CalculateLayoutDimensionsFromCellInstance(cellRecord, cellLayout.CellPool.CellLayoutProxy);
+                    CalculateLayoutDimensionsFromCellInstance(iCellLayout, cellRecord, cellLayout.CellPool.CellLayoutProxy);
             }
 
             float minSize = RecyclerUtil.GetMinSize(currRect.LayoutDimensions, axis);
