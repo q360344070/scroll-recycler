@@ -9,6 +9,9 @@ namespace UnityEngine.UI
 
         bool NeedsUnityLayout;
 
+        CellLayout ICellLayout.CellLayout { get { return CellLayout; } }
+        public LayoutGroup LayoutGroup { get { return this; } }
+
         protected override void Awake()
         {
             base.Awake();

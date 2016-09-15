@@ -33,13 +33,13 @@ public class ScrollRecycler : MonoBehaviour
         }
     }
 
-    public ICellLayout InstantiateCellLayout(string prefabPath, int requiredPoolSize = 24)
+    public CellLayout InstantiateCellLayout(string prefabPath, int requiredPoolSize = 24)
     {
         return InstantiateCellLayout(ResourceCache.Inst.Load(prefabPath), requiredPoolSize);
     }
 
     // The parent needs to be specified in advance for the CellPool
-    public ICellLayout InstantiateCellLayout(GameObject cellLayoutPrefab, int requiredPoolSize = 24)
+    public CellLayout InstantiateCellLayout(GameObject cellLayoutPrefab, int requiredPoolSize = 24)
     {
         // Get or create cell pool
         CellPool cellPool = null;
@@ -61,15 +61,14 @@ public class ScrollRecycler : MonoBehaviour
         // Initialize recycler layout
         GameObject cellLayoutGO = UnityEngine.Object.Instantiate(cellLayoutPrefab);
         ICellLayout iCellLayout = cellLayoutGO.GetComponent<ICellLayout>();
-        CellLayout cellLayoutData = iCellLayout.GetCellLayout();
         ICellLayouts.Add(iCellLayout);
 
         cellLayoutGO.transform.SetParent(ScrollRect.content, false);
-        cellLayoutData.CellPool = cellPool;
-        cellLayoutData.ScrollRecycler = this;
-        if (cellLayoutData.CellPool.CellPrefab == null)
+        iCellLayout.CellLayout.CellPool = cellPool;
+        iCellLayout.CellLayout.ScrollRecycler = this;
+        if (iCellLayout.CellLayout.CellPool.CellPrefab == null)
         {
-            cellLayoutData.CellPool.CellPrefab = cellLayoutData.CellPrefab;
+            iCellLayout.CellLayout.CellPool.CellPrefab = iCellLayout.CellLayout.CellPrefab;
         }
         cellLayoutGO.SetActive(true);
 
@@ -87,9 +86,9 @@ public class ScrollRecycler : MonoBehaviour
             //    layoutProxyRoot.name += "(LayoutProxy)";
             //}
 
-            cellPool.CellLayoutProxy = Instantiate(cellLayoutData.CellPrefab);
+            cellPool.CellLayoutProxy = Instantiate(iCellLayout.CellLayout.CellPrefab);
             cellPool.CellLayoutProxy.gameObject.SetActive(true);
-            cellPool.CellLayoutProxy.name = cellLayoutData.CellPrefab.name + "(LayoutProxy)";
+            cellPool.CellLayoutProxy.name = iCellLayout.CellLayout.CellPrefab.name + "(LayoutProxy)";
             cellPool.CellLayoutProxy.transform.SetParent(cellLayoutGO.transform, false);
             cellPool.CellLayoutProxy.transform.localPosition = Vector2.zero;
 
@@ -107,7 +106,7 @@ public class ScrollRecycler : MonoBehaviour
             }
         }
 
-        return iCellLayout;
+        return iCellLayout.CellLayout;
     }
 
     // NOTE: Using a counter is faster, but bug prone if user staggers pool instantiation
@@ -127,12 +126,12 @@ public class ScrollRecycler : MonoBehaviour
 
     public void ClearRecyclerLayouts()
     {
-        foreach (ICellLayout layout in ICellLayouts)
+        foreach (ICellLayout iCellLayout in ICellLayouts)
         {
-            if (layout != null)
+            if (iCellLayout != null)
             {
-                layout.GetLayoutGroup().transform.SetParent(null);
-                UnityEngine.Object.Destroy(layout.GetLayoutGroup().gameObject);
+                iCellLayout.LayoutGroup.transform.SetParent(null);
+                UnityEngine.Object.Destroy(iCellLayout.LayoutGroup.gameObject);
             }
         }
 
@@ -172,19 +171,17 @@ public class ScrollRecycler : MonoBehaviour
 
         foreach (ICellLayout iCellLayout in ICellLayouts)
         {
-            CellLayout cl = iCellLayout.GetCellLayout();
-            if (cl.LayoutNeedsRebuild)
+            if (iCellLayout.CellLayout.LayoutNeedsRebuild)
             {
                 iCellLayout.ManualLayoutBuild();
-                cl.LayoutNeedsRebuild = false;
+                iCellLayout.CellLayout.LayoutNeedsRebuild = false;
             }
         }
 
         // Place records that should be visible, move off-screen records out of view
-        foreach (ICellLayout icl in ICellLayouts)
+        foreach (ICellLayout iCellLayout in ICellLayouts)
         {
-            CellLayout cl = icl.GetCellLayout();
-            cl.ShowAndPositionVisibleCells();
+            iCellLayout.CellLayout.ShowAndPositionVisibleCells();
         }
     }
 }

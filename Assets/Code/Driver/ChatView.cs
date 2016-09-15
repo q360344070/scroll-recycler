@@ -10,7 +10,6 @@ public class ChatView : MonoBehaviour
     {
         ScrollRecycler
             .InstantiateCellLayout(ChatSectionPrefab)
-            .GetCellLayout()
             .AddCells(new ChatCellData() { Message = "Lorem ipsum dolor sit amet, consectetur adipiscing elit." });
     }
 }
