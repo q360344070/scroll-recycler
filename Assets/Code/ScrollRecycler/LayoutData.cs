@@ -14,29 +14,34 @@ public class LayoutData : ILayoutElement
     public float preferredHeight { get { return _PreferredHeight; } set { _PreferredHeight = value; } }
     public float preferredWidth { get { return _PreferredWidth; } set { _PreferredWidth = value; } }
 
-    [SerializeField]
-    private float _FlexibleHeight;
-    [SerializeField]
-    private float _FlexibleWidth;
-    [SerializeField]
-    private int _LayoutPriority;
-    [SerializeField]
-    private float _MinHeight;
-    [SerializeField]
-    private float _MinWidth;
-    [SerializeField]
-    private float _PreferredHeight;
-    [SerializeField]
-    private float _PreferredWidth;
+    [SerializeField] private float _MinWidth;
+    [SerializeField] private float _MinHeight;
+    [SerializeField] private float _PreferredWidth;
+    [SerializeField] private float _PreferredHeight;
+    [SerializeField] private float _FlexibleWidth;
+    [SerializeField] private float _FlexibleHeight;
+    [SerializeField] private int _LayoutPriority;
 
-    public LayoutData(LayoutDimensions dimensions)
+    public LayoutData(
+        LayoutDimensions layoutWidth = default(LayoutDimensions), 
+        LayoutDimensions layoutHeight = default(LayoutDimensions))
     {
-        minWidth = dimensions.minSize.x;
-        preferredWidth = dimensions.preferredSize.x;
-        flexibleWidth = dimensions.flexibleSize.x;
-        minHeight = dimensions.minSize.y;
-        preferredHeight = dimensions.preferredSize.y;
-        flexibleHeight = dimensions.flexibleSize.y;
+        SetWidth(layoutWidth);
+        SetHeight(layoutHeight);
+    }
+
+    public void SetWidth(LayoutDimensions widthDims)
+    {
+        minWidth = widthDims.Min;
+        preferredWidth = widthDims.Preferred;
+        flexibleWidth = widthDims.Flexible;
+    }
+
+    public void SetHeight(LayoutDimensions heightDims)
+    {
+        minHeight = heightDims.Min;
+        preferredHeight = heightDims.Preferred;
+        flexibleHeight = heightDims.Flexible;
     }
 
     public void CalculateLayoutInputHorizontal()
@@ -70,7 +75,13 @@ public class LayoutData : ILayoutElement
 
 public struct LayoutDimensions
 {
-    public Vector2 minSize;
-    public Vector2 preferredSize;
-    public Vector2 flexibleSize;
+    public float Min;
+    public float Preferred;
+    public float Flexible;
+}
+
+public struct LayoutInput
+{
+    public LayoutDimensions Height;
+    public LayoutDimensions Width;
 }
