@@ -344,7 +344,7 @@ public static class RecyclerUtil
     }
 
     static LayoutDimensions CalculateLayoutDimensionsFromCellInstance(
-        ICellLayout cellLayout,
+        //ICellLayout cellLayout,
         CellData cellData, 
         GameObject proxyLayoutGO)
     {
@@ -355,7 +355,7 @@ public static class RecyclerUtil
         //recyclerCell.OnCellShow(cellRecord);
 
         // Horizontal axis
-                float rectSizeOnCurrAxis = ((RectTransform)cellLayout.GetLayoutGroup().transform).rect.size[0];
+                //float rectSizeOnCurrAxis = ((RectTransform)cellLayout.GetLayoutGroup().transform).rect.size[0];
         //bool flag = isVertical ^ axis == 1;
 
 
@@ -375,12 +375,12 @@ public static class RecyclerUtil
         //}
 
 
-        float childSize = Mathf.Clamp(
-            value,
-            minSize,
-            (flexibleSize <= 0f) ? preferredSize : rectSizeOnCurrAxis);
-        float startOffset = RecyclerUtil.GetStartOffset(layoutGroup, 0, childSize);
-        RecyclerUtil.SetChildAlongAxis((RectTransform)proxyLayoutGO.transform, 0, startOffset, childSize);
+        //float childSize = Mathf.Clamp(
+        //    value,
+        //    minSize,
+        //    (flexibleSize <= 0f) ? preferredSize : rectSizeOnCurrAxis);
+        //float startOffset = RecyclerUtil.GetStartOffset(layoutGroup, 0, childSize);
+        //RecyclerUtil.SetChildAlongAxis((RectTransform)proxyLayoutGO.transform, 0, startOffset, childSize);
 
         // Vertical axis
         //RecyclerUtil.GetStartOffset(layoutGroup, 1, childSize);

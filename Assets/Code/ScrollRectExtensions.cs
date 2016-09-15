@@ -206,4 +206,108 @@ public static class ScrollRectExtensions
 
         return Vector3.zero;
     }
+
+        public static void ScrollChildToCenter(this ScrollRect sr, RectTransform childRtx)
+    {
+        if (sr && childRtx)
+        {
+            sr.ScrollChildToCenter(childRtx.position, childRtx.rect.size, childRtx.pivot);
+        }
+    }
+
+    public static void ScrollChildToCenter(this ScrollRect sr, GameObject child)
+    {
+        if (sr && child)
+        {
+            sr.ScrollChildToCenter((RectTransform)child.transform);
+        }
+    }
+
+    public static void ScrollChildToCenter(this ScrollRect sr, Vector3 childWorldPos, Vector2 childSize, Vector2 childPivot)
+    {
+        if (sr)
+        {            
+            var rect = ((RectTransform)sr.transform).rect;
+
+            Rect myRect = new Rect();
+            myRect.y = (rect.height - childSize.y) / 2;
+            myRect.width = rect.width;
+            myRect.height = childSize.y;
+
+            ScrollChildInView(sr, childWorldPos, childSize, childPivot, myRect);
+        }
+    }
+
+    public static void ScrollChildInView(this ScrollRect sr, RectTransform childRtx, Rect viewRect)
+    {
+        if (sr && childRtx)
+        {
+            sr.ScrollChildInView(childRtx.position, childRtx.rect.size, childRtx.pivot, viewRect);
+        }
+    }
+
+    public static void ScrollChildInView(this ScrollRect sr, GameObject child, Rect viewRect)
+    {
+        if (sr && child)
+        {
+            sr.ScrollChildInView((RectTransform)child.transform, viewRect);
+        }
+    }
+
+    public static void ScrollChildInView(this ScrollRect sr, Vector3 childWorldPos, Vector2 childSize, Vector2 childPivot, Rect viewRect)
+    {
+        if (sr && sr.content && sr.content.transform.parent)
+        {
+            var contentRtx = ((RectTransform)sr.content.transform);
+
+            if (contentRtx)
+            {
+                contentRtx.anchoredPosition = CalculateVisibleAnchoredPosition(sr, contentRtx, childWorldPos, childSize, childPivot, viewRect);
+            }
+        }
+    }
+
+    private static Vector2 CalculateVisibleAnchoredPosition(ScrollRect sr, RectTransform contentRtx, Vector3 childWorldPos, Vector2 childSize, Vector2 childPivot, Rect viewRect)
+    {
+        if ((sr.horizontal && sr.vertical) || (!sr.horizontal && !sr.vertical))
+        {
+            MfLog.Error(LC.Trace, "Tried to scroll to a child on a ScrollRect that can scroll both horizontal and "
+                + "vertical!");
+            return contentRtx.anchoredPosition;
+        }
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)sr.transform);
+
+        if (sr.horizontal)
+        {
+            // This will not work when invoked during an Awake()
+
+            float xDist = sr.ChildPosInContentRect(childWorldPos).x;
+
+            float targetXPosLeft = xDist
+                + (childSize.x * childPivot.x) // Add the influence of a pivot on child if one present
+                - (contentRtx.rect.width * contentRtx.pivot.x) // Subtract the influence of the content's pivot and the anchor of the parent rects
+                - (((RectTransform)contentRtx.parent.transform).rect.width * contentRtx.anchorMin.x)
+                + viewRect.x;
+
+            float targetXPosRight = targetXPosLeft + viewRect.width - childSize.x;
+
+            return sr.GetClosestContentAnchoredPositionBounded(new Vector2(targetXPosLeft, sr.content.anchoredPosition.y), new Vector2(targetXPosRight, sr.content.anchoredPosition.y));
+        }
+        else
+        {
+            float yDist = sr.ChildPosInContentRect(childWorldPos).y;
+
+            float targetYPosTop = yDist
+                - (childSize.y * (1.0f - childPivot.y)) // Subtract the influence of a pivot on child if one present
+                + (contentRtx.rect.height * (1.0f - contentRtx.pivot.y)) // Add the influence of the content's pivot and the anchor of the parent rects
+                + (((RectTransform)contentRtx.parent.transform).rect.height * (1.0f - contentRtx.anchorMin.y))
+                - viewRect.y;
+
+
+            float targetYPosBottom = targetYPosTop - viewRect.height + childSize.y;
+
+            return sr.GetClosestContentAnchoredPositionBounded(new Vector2(sr.content.anchoredPosition.x, targetYPosTop), new Vector2(sr.content.anchoredPosition.x, targetYPosBottom));
+        }
+    }
 }
