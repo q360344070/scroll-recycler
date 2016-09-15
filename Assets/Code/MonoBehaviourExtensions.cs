@@ -8,8 +8,7 @@ public static class MonoBehaviourExtensions
     // BE CAREFUL USING THIS FUNCTION -bt -jc
     // This function copies all of the references in one component to another, this includes references to
     // other objects. For instance, if the first component has a reference to a text field -> making
-    // changes to the text field in the _second component_ will instead change the text field in the first component.
-    // It then follows that the _second component_ will reflect those same changes. 
+    // changes to the text field in the _second component_ will also change the text field in the first component.
     // You have been warned.
     public static T CopyFieldsFrom<T>(this Component com, T other) where T : Component
     {
