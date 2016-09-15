@@ -350,7 +350,8 @@ public static class RecyclerUtil
         recyclerCell.OnCellInstantiate();
         recyclerCell.OnCellShow(cellData);
 
-        LayoutDimensions dims = cellLayout.CellLayout.CreateLayoutDimensionsFromCellData(cellData);
+        LayoutDimensions dims = cellLayout.CellLayout.CreateLayoutDimensionsFromCellData(
+            (RectTransform)proxyLayoutGO.transform);
 
         return dims;
     }
@@ -442,27 +443,8 @@ public static class RecyclerUtil
     }
 }
 
-public sealed class LayoutAxis
+public enum LayoutAxis
 {
-    public static readonly LayoutAxis Horizontal = new LayoutAxis(0);
-    public static readonly LayoutAxis Vertical = new LayoutAxis(1);
-
-    public static readonly SortedList<byte, LayoutAxis> Values = new SortedList<byte, LayoutAxis>();
-    private readonly byte Value;
-
-    private LayoutAxis(byte value)
-    {
-        this.Value = value;
-        Values.Add(value, this);
-    }
-
-    public static implicit operator LayoutAxis(byte value)
-    {
-        return Values[value];
-    }
-
-    public static implicit operator byte(LayoutAxis value)
-    {
-        return value.Value;
-    }
+    Horizontal = 0,
+    Vertical = 1
 }

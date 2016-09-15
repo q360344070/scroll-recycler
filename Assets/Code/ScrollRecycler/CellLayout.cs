@@ -123,7 +123,7 @@ public class CellLayout
        
     }
 
-    public LayoutDimensions CreateLayoutDimensionsFromCellData(CellData cellData)
+    public LayoutDimensions CreateLayoutDimensionsFromCellData(RectTransform cellProxyRtx)
     {
         float minWidth = 0.0f;
         float preferredWidth = 0.0f;
@@ -136,18 +136,18 @@ public class CellLayout
         bool isVertical = ICellLayout.LayoutGroup is VerticalCellLayout;
 
         GetLayoutDimensionsFromCellData(
-            cellData, 
+            cellProxyRtx, 
             ICellLayout, 
-            LayoutAxis.Horizontal, 
+            (int)LayoutAxis.Horizontal, 
             isVertical, 
             ref minWidth, 
             ref preferredWidth, 
             ref flexibleWidth);
 
         GetLayoutDimensionsFromCellData(
-            cellData, 
+            cellProxyRtx, 
             ICellLayout, 
-            LayoutAxis.Vertical, 
+            (int)LayoutAxis.Vertical, 
             isVertical, 
             ref minHeight, 
             ref preferredHeight, 
@@ -165,9 +165,9 @@ public class CellLayout
     }
 
     public void GetLayoutDimensionsFromCellData(
-        CellData cellData,
+        RectTransform cellLayoutRtx,
         ICellLayout iCellLayout,
-        LayoutAxis axis,
+        int axis,
         bool isVertical,
         ref float minSize, 
         ref float preferredSize,
@@ -189,11 +189,9 @@ public class CellLayout
                 {
                     CellData currRecord = iCellLayout.CellLayout.CellRecords[i];
 
-                    var cellInstanceRtx = (RectTransform)cellData.Instance.transform;
-
-                    minSize = RecyclerUtil.GetMinSize(cellInstanceRtx, axis);
-                    preferredSize = RecyclerUtil.GetPreferredSize(cellInstanceRtx, axis);
-                    flexibleSize = RecyclerUtil.GetFlexibleSize(cellInstanceRtx, axis);
+                    minSize = RecyclerUtil.GetMinSize(cellLayoutRtx, axis);
+                    preferredSize = RecyclerUtil.GetPreferredSize(cellLayoutRtx, axis);
+                    flexibleSize = RecyclerUtil.GetFlexibleSize(cellLayoutRtx, axis);
                     if ((axis != 0) 
                         ? ((HorizontalOrVerticalLayoutGroup)iCellLayout.LayoutGroup).childForceExpandHeight 
                         : ((HorizontalOrVerticalLayoutGroup)iCellLayout.LayoutGroup).childForceExpandWidth)
