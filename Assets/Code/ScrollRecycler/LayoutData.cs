@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [Serializable]
-public class LayoutDimensions : ILayoutElement
+public class LayoutData : ILayoutElement
 {
     public float flexibleHeight { get { return _FlexibleHeight; } set { _FlexibleHeight = value; } }
     public float flexibleWidth { get { return _FlexibleWidth; } set { _FlexibleWidth = value; } }
@@ -28,6 +28,16 @@ public class LayoutDimensions : ILayoutElement
     private float _PreferredHeight;
     [SerializeField]
     private float _PreferredWidth;
+
+    public LayoutData(LayoutDimensions dimensions)
+    {
+        minWidth = dimensions.minSize.x;
+        preferredWidth = dimensions.preferredSize.x;
+        flexibleWidth = dimensions.flexibleSize.x;
+        minHeight = dimensions.minSize.y;
+        preferredHeight = dimensions.preferredSize.y;
+        flexibleHeight = dimensions.flexibleSize.y;
+    }
 
     public void CalculateLayoutInputHorizontal()
     {
@@ -56,4 +66,11 @@ public class LayoutDimensions : ILayoutElement
         flexibleWidth = le.flexibleWidth;
         flexibleHeight = le.flexibleHeight;
     }
+}
+
+public struct LayoutDimensions
+{
+    public Vector2 minSize;
+    public Vector2 preferredSize;
+    public Vector2 flexibleSize;
 }

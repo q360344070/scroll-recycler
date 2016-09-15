@@ -57,7 +57,6 @@ namespace Core.Collections
         }
     }
 
-
     // Three Key Dictionary using a tuple as key
     public class Dictionary<K1, K2, K3, V> : Dictionary<Tuple<K1, K2, K3>, V>
     {

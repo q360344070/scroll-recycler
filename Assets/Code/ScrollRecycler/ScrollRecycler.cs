@@ -72,7 +72,7 @@ public class ScrollRecycler : MonoBehaviour
         }
         cellLayoutGO.SetActive(true);
 
-        if (!cellPool.CellLayoutProxy)
+        if (!cellPool.CellProxy)
         {
             // TODO: Evaluate how we want to use this
             // InstantiateCellLayoutProxy()
@@ -86,23 +86,23 @@ public class ScrollRecycler : MonoBehaviour
             //    layoutProxyRoot.name += "(LayoutProxy)";
             //}
 
-            cellPool.CellLayoutProxy = Instantiate(iCellLayout.CellLayout.CellPrefab);
-            cellPool.CellLayoutProxy.gameObject.SetActive(true);
-            cellPool.CellLayoutProxy.name = iCellLayout.CellLayout.CellPrefab.name + "(LayoutProxy)";
-            cellPool.CellLayoutProxy.transform.SetParent(cellLayoutGO.transform, false);
-            cellPool.CellLayoutProxy.transform.localPosition = Vector2.zero;
+            cellPool.CellProxy = Instantiate(iCellLayout.CellLayout.CellPrefab);
+            cellPool.CellProxy.gameObject.SetActive(true);
+            cellPool.CellProxy.name = iCellLayout.CellLayout.CellPrefab.name + "(ProxyCell)";
+            cellPool.CellProxy.transform.SetParent(cellLayoutGO.transform, false);
+            cellPool.CellProxy.transform.localPosition = Vector2.zero;
 
-            var cellProxyCG = cellPool.CellLayoutProxy.GetComponent<CanvasGroup>();
+            var cellProxyCG = cellPool.CellProxy.GetComponent<CanvasGroup>();
             if (!cellProxyCG)
             {
-                cellProxyCG = cellPool.CellLayoutProxy.AddComponent<CanvasGroup>();
+                cellProxyCG = cellPool.CellProxy.AddComponent<CanvasGroup>();
             }
             cellProxyCG.alpha = 0.0f;
 
-            var cellProxyLE = cellPool.CellLayoutProxy.GetComponent<LayoutElement>();
+            var cellProxyLE = cellPool.CellProxy.GetComponent<LayoutElement>();
             if (!cellProxyLE)
             {
-                cellProxyLE = cellPool.CellLayoutProxy.AddComponent<LayoutElement>();
+                cellProxyLE = cellPool.CellProxy.AddComponent<LayoutElement>();
             }
         }
 
@@ -163,12 +163,13 @@ public class ScrollRecycler : MonoBehaviour
     // NOTE: ScrollRecycler's execution order is set after all other scripts
     void LateUpdate()
     {
-        // Update cell position
+        // Match the cell pool (all cells) to the ScrollRect
         foreach (CellPool cp in CellPools)
         {
             cp.transform.position = ScrollRect.content.position;
         }
 
+        // Build each layout that needs to be rebuilt
         foreach (ICellLayout iCellLayout in ICellLayouts)
         {
             if (iCellLayout.CellLayout.LayoutNeedsRebuild)

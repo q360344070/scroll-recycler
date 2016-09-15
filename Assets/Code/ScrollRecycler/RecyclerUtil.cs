@@ -7,44 +7,24 @@ using UnityEngine.Events;
 
 public static class RecyclerUtil
 {
-    public static void DuplicateLayoutElements(GameObject source, GameObject destination)
-    {
-        Component[] components = source.GetComponents<Component>();
-
-        // This layout elements are the types which will contribute to the LayoutDimensions of the RectTransform
-        foreach (Component mb in components)
-        {
-            destination.TryCopyComponent<GridLayoutGroup>(mb);
-            destination.TryCopyComponent<VerticalLayoutGroup>(mb);
-            destination.TryCopyComponent<HorizontalLayoutGroup>(mb);
-            destination.TryCopyComponent<ContentSizeFitter>(mb);
-            destination.TryCopyComponent<ScrollRect>(mb);
-        }
-    }
-
-    public static void SetChildAlongAxis(RectTransformData rectDims, int axis, float pos, float size)
-    {
-        rectDims.SetInsetAndSizeFromParentEdge((axis != 0) ? RectTransform.Edge.Top : RectTransform.Edge.Left, pos, size);
-    }
-
     public static float GetMinSize(RectTransform rect, int axis)
     {
         return (axis == 0) ? GetMinWidth(rect) : GetMinHeight(rect);
     }
 
-    public static float GetPreferredSize(RectTransform rect, int axis)
-    {
-        return (axis == 0) ? GetPreferredWidth(rect) : GetPreferredHeight(rect);
-    }
-
-    public static float GetFlexibleSize(RectTransform rect, int axis)
-    {
-        return (axis == 0) ? GetFlexibleWidth(rect) : GetFlexibleHeight(rect);
-    }
-
     public static float GetMinWidth(RectTransform rect)
     {
         return GetLayoutProperty(rect, (ILayoutElement e) => e.minWidth, 0f);
+    }
+
+    public static float GetMinHeight(RectTransform rect)
+    {
+        return GetLayoutProperty(rect, (ILayoutElement e) => e.minHeight, 0f);
+    }
+
+    public static float GetPreferredSize(RectTransform rect, int axis)
+    {
+        return (axis == 0) ? GetPreferredWidth(rect) : GetPreferredHeight(rect);
     }
 
     public static float GetPreferredWidth(RectTransform rect)
@@ -54,17 +34,7 @@ public static class RecyclerUtil
         return Mathf.Max(minWidth, preferredWidth);
     }
 
-    public static float GetFlexibleWidth(RectTransform rect)
-    {
-        return GetLayoutProperty(rect, (ILayoutElement e) => e.flexibleWidth, 0f);
-    }
-
-    public static float GetMinHeight(RectTransform rect)
-    {
-        return GetLayoutProperty(rect, (ILayoutElement e) => e.minHeight, 0f);
-    }
-
-    public static float GetPreferredHeight(RectTransform rect)
+   public static float GetPreferredHeight(RectTransform rect)
     {
         float minHeight = GetLayoutProperty(rect, (ILayoutElement e) => e.minHeight, 0f);
         float preferredHeight = GetLayoutProperty(rect, (ILayoutElement e) => e.preferredHeight, 0f);
@@ -72,20 +42,26 @@ public static class RecyclerUtil
         return Mathf.Max(minHeight, preferredHeight);
     }
 
+    public static float GetFlexibleSize(RectTransform rect, int axis)
+    {
+        return (axis == 0) ? GetFlexibleWidth(rect) : GetFlexibleHeight(rect);
+    }
+
+    public static float GetFlexibleWidth(RectTransform rect)
+    {
+        return GetLayoutProperty(rect, (ILayoutElement e) => e.flexibleWidth, 0f);
+    }
+
     public static float GetFlexibleHeight(RectTransform rect)
     {
         return GetLayoutProperty(rect, (ILayoutElement e) => e.flexibleHeight, 0f);
     }
 
-    public static float GetLayoutProperty(RectTransform rect, Func<ILayoutElement, float> property, float defaultValue)
+    public static float GetLayoutProperty(
+        RectTransform rect, 
+        Func<ILayoutElement, float> property, 
+        float defaultValue)
     {
-        ILayoutElement layoutElement;
-        return GetLayoutProperty(rect, property, defaultValue, out layoutElement);
-    }
-
-    public static float GetLayoutProperty(RectTransform rect, Func<ILayoutElement, float> property, float defaultValue, out ILayoutElement source)
-    {
-        source = null;
         if (rect == null)
         {
             return 0f;
@@ -99,8 +75,9 @@ public static class RecyclerUtil
         {
             ILayoutElement layoutElement = list[i] as ILayoutElement;
 
-            // Original check only allows behaviors to trigger if isActiveAndEnabled
+            // NOTE: Original check only allows behaviors to trigger if isActiveAndEnabled
             //if (!(layoutElement is Behaviour) || ((Behaviour)layoutElement).isActiveAndEnabled)
+
             if (layoutElement != null)
             {
                 int layoutPriority = layoutElement.layoutPriority;
@@ -113,34 +90,48 @@ public static class RecyclerUtil
                         {
                             num = propertyValue;
                             num2 = layoutPriority;
-                            source = layoutElement;
                         }
                         else if (propertyValue > num)
                         {
                             num = propertyValue;
-                            source = layoutElement;
                         }
                     }
                 }
             }
         }
+
         ListPool<Component>.Release(list);
         return num;
     }
 
-    public static float GetMinSize(LayoutDimensions dims, int axis)
+    public static float GetMinSize(LayoutData dims, int axis)
     {
         return (axis == 0) ? dims.minWidth : dims.minHeight;
     }
 
-    public static float GetPreferredSize(LayoutDimensions dims, int axis)
+    public static float GetPreferredSize(LayoutData dims, int axis)
     {
         return (axis == 0) ? dims.preferredWidth : dims.preferredHeight;
     }
 
-    public static float GetFlexibleSize(LayoutDimensions dims, int axis)
+    public static float GetFlexibleSize(LayoutData dims, int axis)
     {
         return (axis == 0) ? dims.flexibleWidth : dims.flexibleHeight;
+    }
+
+    public static void DuplicateLayoutElements(GameObject source, GameObject destination)
+    {
+        Component[] components = source.GetComponents<Component>();
+
+        // This layout elements are the types which will contribute to the LayoutDimensions of the RectTransform
+        foreach (Component mb in components)
+        {
+            destination.TryCopyComponent<GridLayoutGroup>(mb);
+            destination.TryCopyComponent<VerticalLayoutGroup>(mb);
+            destination.TryCopyComponent<HorizontalLayoutGroup>(mb);
+            destination.TryCopyComponent<ContentSizeFitter>(mb);
+            destination.TryCopyComponent<ScrollRect>(mb);
+        }
     }
 
     // =========== LayoutGroup forks ===========
@@ -179,181 +170,6 @@ public static class RecyclerUtil
         return (float)((axis != 0)
             ? (int)layoutGroup.padding.top
             : (int)layoutGroup.padding.left) + num3 * num4;
-    }
-
-    // =========== HorizontalOrVerticalLayoutGroup calculations ===========
-    public static void CalculateCellLayoutInput(
-        HorizontalOrVerticalLayoutGroup layoutGroup,
-        ICellLayout iCellLayout,
-        int axis,
-        bool isVertical,
-        ref float totalMin,
-        ref float totalPreferred,
-        ref float totalFlexible)
-    {
-        CellLayout cellLayout = iCellLayout.CellLayout;
-        float padding = ((axis != 0) ? layoutGroup.padding.vertical : layoutGroup.padding.horizontal);
-        totalMin = padding;
-        totalPreferred = padding;
-        totalFlexible = 0f;
-        bool flag = isVertical ^ (axis == 1);
-
-        //for (int i = 0; i < cellLayout.CellRecordsRectTransformData.Count; i++)
-        foreach (CellData cellRecord in cellLayout.CellRecords)
-        {
-            RectTransformData currRect = cellRecord.RectTransformData;
-
-            if (currRect.LayoutDimensions == null)
-            {
-                currRect.LayoutDimensions =
-                    CalculateLayoutDimensionsFromCellInstance(
-                        iCellLayout, 
-                        cellRecord,
-                        cellLayout.CellPool.CellLayoutProxy);
-            }
-
-            float minSize = RecyclerUtil.GetMinSize(currRect.LayoutDimensions, axis);
-            float preferredSize = RecyclerUtil.GetPreferredSize(currRect.LayoutDimensions, axis);
-            float flexibleSize = RecyclerUtil.GetFlexibleSize(currRect.LayoutDimensions, axis);
-
-            if ((axis != 0) ? layoutGroup.childForceExpandHeight : layoutGroup.childForceExpandWidth)
-            {
-                flexibleSize = Mathf.Max(flexibleSize, 1f);
-            }
-
-            if (flag)
-            {
-                totalMin = Mathf.Max(minSize + padding, totalMin);
-                totalPreferred = Mathf.Max(preferredSize + padding, totalPreferred);
-                totalFlexible = Mathf.Max(flexibleSize, totalFlexible);
-            }
-            else
-            {
-                totalMin += minSize + layoutGroup.spacing;
-                totalPreferred += preferredSize + layoutGroup.spacing;
-                totalFlexible += flexibleSize;
-            }
-        }
-
-        if (!flag && cellLayout.CellRecords.Count > 0)
-        {
-            totalMin -= layoutGroup.spacing;
-            totalPreferred -= layoutGroup.spacing;
-        }
-
-        totalPreferred = Mathf.Max(totalMin, totalPreferred);
-    }
-
-    public static void SetAllCellsDimensionsAlongCellLayout(
-        HorizontalOrVerticalLayoutGroup layoutGroup,
-        ICellLayout cellLayout,
-        int axis,
-        bool isVertical)
-    {
-        var cellLayoutRect = (RectTransform)layoutGroup.transform;
-        CellLayout cellLayoutData = cellLayout.CellLayout;
-
-        float rectSizeOnCurrAxis = cellLayoutRect.rect.size[axis];
-        bool flag = isVertical ^ axis == 1;
-
-        if (flag)
-        {
-            float value = rectSizeOnCurrAxis - (float)((axis != 0)
-                ? layoutGroup.padding.vertical
-                : layoutGroup.padding.horizontal);
-
-            foreach (CellData cellRecord in cellLayoutData.CellRecords)
-            {
-                RectTransformData currRect = cellRecord.RectTransformData;
-
-                float minSize = RecyclerUtil.GetMinSize(currRect.LayoutDimensions, axis);
-                float preferredSize = RecyclerUtil.GetPreferredSize(currRect.LayoutDimensions, axis);
-                float flexibleSize = RecyclerUtil.GetFlexibleSize(currRect.LayoutDimensions, axis);
-
-                if ((axis != 0) ? layoutGroup.childForceExpandHeight : layoutGroup.childForceExpandWidth)
-                {
-                    flexibleSize = Mathf.Max(flexibleSize, 1f);
-                }
-
-                float childSize = Mathf.Clamp(value, minSize, (flexibleSize <= 0f)
-                    ? preferredSize
-                    : rectSizeOnCurrAxis);
-                float startOffset = RecyclerUtil.GetStartOffset(layoutGroup, axis, childSize);
-
-                RecyclerUtil.SetChildAlongAxis(currRect, axis, startOffset, childSize);
-            }
-        }
-        else
-        {
-            float childPos = ((axis != 0) ? layoutGroup.padding.top : layoutGroup.padding.left);
-
-            if (GetTotalFlexibleSize(layoutGroup, axis) == 0f
-                && GetTotalPreferredSize(layoutGroup, axis) < rectSizeOnCurrAxis)
-            {
-                childPos = GetStartOffset(layoutGroup, axis,
-                    GetTotalPreferredSize(layoutGroup, axis) - (float)((axis != 0)
-                    ? layoutGroup.padding.vertical
-                    : layoutGroup.padding.horizontal));
-            }
-
-            float minToPreferredRatio = 0f;
-
-            if (GetTotalMinSize(layoutGroup, axis) != GetTotalPreferredSize(layoutGroup, axis))
-            {
-                float rectSizeAfterMinSize =
-                    rectSizeOnCurrAxis - GetTotalMinSize(layoutGroup, axis);
-                float deltaBetweenMinAndPreferred =
-                    GetTotalPreferredSize(layoutGroup, axis) - GetTotalMinSize(layoutGroup, axis);
-
-                minToPreferredRatio = Mathf.Clamp01(rectSizeAfterMinSize / deltaBetweenMinAndPreferred);
-            }
-
-            float sizeRatio = 0f;
-
-            if (rectSizeOnCurrAxis > GetTotalPreferredSize(layoutGroup, axis)
-                && GetTotalFlexibleSize(layoutGroup, axis) > 0f)
-            {
-                sizeRatio = (rectSizeOnCurrAxis - GetTotalPreferredSize(layoutGroup, axis))
-                    / GetTotalFlexibleSize(layoutGroup, axis);
-            }
-
-            //for (int j = 0; j < cellLayoutData.CellRecords.Count; j++)
-            foreach (CellData cellRecord in cellLayoutData.CellRecords)
-            {
-                RectTransformData currRect = cellRecord.RectTransformData;
-
-                float minSize = RecyclerUtil.GetMinSize(currRect.LayoutDimensions, axis);
-                float preferredSize = RecyclerUtil.GetPreferredSize(currRect.LayoutDimensions, axis);
-                float flexibleSize = RecyclerUtil.GetFlexibleSize(currRect.LayoutDimensions, axis);
-
-                if ((axis != 0) ? layoutGroup.childForceExpandHeight : layoutGroup.childForceExpandWidth)
-                {
-                    flexibleSize = Mathf.Max(flexibleSize, 1f);
-                }
-
-                float childSize = Mathf.Lerp(minSize, preferredSize, minToPreferredRatio);
-                childSize += flexibleSize * sizeRatio;
-
-                // RectTransformDimensions for record set here
-                RecyclerUtil.SetChildAlongAxis(currRect, axis, childPos, childSize);
-                childPos += childSize + layoutGroup.spacing;
-            }
-        }
-    }
-
-    static LayoutDimensions CalculateLayoutDimensionsFromCellInstance(
-        ICellLayout cellLayout,
-        CellData cellData, 
-        GameObject proxyLayoutGO)
-    {
-        var recyclerCell = proxyLayoutGO.GetComponent<IRecyclableCell>();
-        recyclerCell.OnCellInstantiate();
-        recyclerCell.OnCellShow(cellData);
-
-        LayoutDimensions dims = cellLayout.CellLayout.CreateLayoutDimensionsFromCellData(
-            (RectTransform)proxyLayoutGO.transform);
-
-        return dims;
     }
 
     // =========== Class definitions ============

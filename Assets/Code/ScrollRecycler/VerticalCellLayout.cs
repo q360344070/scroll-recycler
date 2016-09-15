@@ -10,44 +10,12 @@ namespace UnityEngine.UI
         bool NeedsUnityLayout;
 
         CellLayout ICellLayout.CellLayout { get { return CellLayout; } }
-        public LayoutGroup LayoutGroup { get { return this; } }
+        LayoutGroup ICellLayout.LayoutGroup { get { return this; } }
 
         protected override void Awake()
         {
             base.Awake();
             CellLayout.ICellLayout = this;
-        }
-
-        public CellLayout GetCellLayout()
-        {
-            return CellLayout;
-        }
-
-        public LayoutGroup GetLayoutGroup()
-        {
-            return this;
-        }
-
-        void CalculateCellLayoutInput(int axis, bool isVertical)
-        {
-            float totalMin = 0.0f;
-            float totalPreferred = 0.0f;
-            float totalFlexible = 0.0f;
-
-            RecyclerUtil.CalculateCellLayoutInput(
-                this,
-                this,
-                axis,
-                isVertical,
-                ref totalMin,
-                ref totalPreferred,
-                ref totalFlexible);
-            SetLayoutInputForAxis(totalMin, totalPreferred, totalFlexible, axis);
-        }
-
-        void SetCellsDimensionsAlongCellLayout(int axis, bool isVertical)
-        {
-            RecyclerUtil.SetAllCellsDimensionsAlongCellLayout(this, this, axis, isVertical);
         }
 
         // ============ Automatic Layout system functions (Unity) ============
@@ -63,7 +31,7 @@ namespace UnityEngine.UI
         {
             if (NeedsUnityLayout)
             {
-                ManualCalculateLayoutInputVertical();
+                ManualSetLayoutHorizontal();
             }
         }
 
@@ -71,13 +39,27 @@ namespace UnityEngine.UI
         {
             if (NeedsUnityLayout)
             {
-                NeedsUnityLayout = false;
+                ManualCalculateLayoutInputVertical();
             }
         }
 
-        public override void SetLayoutVertical() {}
+        public override void SetLayoutVertical()
+        {
+            if (NeedsUnityLayout)
+            {
+                ManualSetLayoutVertical();
+            }
+        }
 
         // =========== Manual Layout functions ===========
+        public void ManualLayoutBuild()
+        {
+            ManualCalculateLayoutInputHorizontal();
+            ManualSetLayoutHorizontal();
+            ManualCalculateLayoutInputVertical();
+            ManualSetLayoutVertical();
+        }
+
         void ManualCalculateLayoutInputHorizontal()
         {
             CalculateCellLayoutInput(0, true);
@@ -85,7 +67,7 @@ namespace UnityEngine.UI
 
         void ManualSetLayoutHorizontal()
         {
-            SetCellsDimensionsAlongCellLayout(0, true);
+            CellLayout.SetAllCellsDimensions(this, this, (int)LayoutAxis.Horizontal, true);
         }
 
         void ManualCalculateLayoutInputVertical()
@@ -95,15 +77,24 @@ namespace UnityEngine.UI
 
         void ManualSetLayoutVertical()
         {
-            SetCellsDimensionsAlongCellLayout(1, true);
+            CellLayout.SetAllCellsDimensions(this, this, (int)LayoutAxis.Vertical, true);
         }
 
-        public void ManualLayoutBuild()
+        void CalculateCellLayoutInput(int axis, bool isVertical)
         {
-            ManualCalculateLayoutInputHorizontal();
-            ManualSetLayoutHorizontal();
-            ManualCalculateLayoutInputVertical();
-            ManualSetLayoutVertical();
+            float totalMin = 0.0f;
+            float totalPreferred = 0.0f;
+            float totalFlexible = 0.0f;
+
+            CellLayout.SetLayoutInput(
+                this,
+                this,
+                axis,
+                isVertical,
+                ref totalMin,
+                ref totalPreferred,
+                ref totalFlexible);
+            SetLayoutInputForAxis(totalMin, totalPreferred, totalFlexible, axis);
         }
     }
 }

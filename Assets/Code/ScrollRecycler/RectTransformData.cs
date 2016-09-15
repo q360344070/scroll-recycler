@@ -148,8 +148,6 @@ public class RectTransformData
     // Observee properties
     //==================================================================================================================
 
-    public LayoutDimensions LayoutDimensions;
-
     // Non RTX fields
     Transform _parent;
     Quaternion _localRotation = Quaternion.identity;
@@ -215,13 +213,15 @@ public class RectTransformData
             : (-inset - size * (1f - this.pivot[axis])));
         this.anchoredPosition = temp;
 
-        // position - NOTE: Might be able to defer this until axis == 1
+        // position
+        // NOTE: Might be able to defer this until axis == 1
         temp = this.position;
         temp[axis] = Misc.AnchoredPositionToWorldPosition((RectTransform)parent, anchoredPosition,
             pivot, anchorMin, anchorMax)[axis];
         this.position = temp;
 
-        // localPosition - NOTE: Might be able to defer this until axis == 1
+        // localPosition 
+        // NOTE: Might be able to defer this until axis == 1
         temp = this.localPosition;
         temp[axis] = parent.InverseTransformPoint(this.position)[axis];
         this.localPosition = temp;

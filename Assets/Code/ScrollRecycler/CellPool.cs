@@ -7,7 +7,7 @@ public class CellPool : MonoBehaviour
 {
     [NonSerialized] public ScrollRecycler ScrollRecycler;
     [NonSerialized] public GameObject CellPrefab;
-    [NonSerialized] public GameObject CellLayoutProxy; // Evaluate how we want to use this
+    [NonSerialized] public GameObject CellProxy; // Evaluate how we want to use this
     public bool AllCellsInstantiated { get { return AllPooledObjects.Count >= RequiredPoolSize; } }
     int RequiredPoolSize;
     [NonSerialized] public List<GameObject> AllPooledObjects = new List<GameObject>();
