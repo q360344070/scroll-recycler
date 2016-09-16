@@ -11,32 +11,19 @@ public class HorizontalOrVerticalCellLayout : CellLayout
     {
         var hovLayoutGroup = (HorizontalOrVerticalLayoutGroup)ICellLayout.LayoutGroup;
         bool isVertical = hovLayoutGroup is VerticalLayoutGroup;
-        var layoutDimensions = new LayoutDimensions();
-
         float layoutPadding = (axis != 0) ? hovLayoutGroup.padding.vertical : hovLayoutGroup.padding.horizontal;
         bool initialAxis = isVertical ^ (axis == LayoutAxis.Vertical);
-
-        layoutDimensions.Min = layoutPadding;
-        layoutDimensions.Preferred = layoutPadding;
-        layoutDimensions.Flexible = 0f;
+        var layoutDimensions = new LayoutDimensions() { Min = layoutPadding, Preferred = layoutPadding, Flexible = 0f };
 
         foreach (CellData cellRecord in CellRecords)
         {
-            if (axis == LayoutAxis.Horizontal)
+            bool cellNeedsLayoutData = 
+                (!cellRecord.LayoutData.LayoutDataCalculatedHorizontal && axis == LayoutAxis.Horizontal)
+                || (!cellRecord.LayoutData.LayoutDataCalculatedVertical && axis == LayoutAxis.Vertical);
+
+            if (cellNeedsLayoutData)
             {
-                if (!cellRecord.LayoutDataCalculatedHorizontal)
-                {
-                    cellRecord.LayoutData.SetWidth(PrecalculateCellLayoutData(cellRecord, LayoutAxis.Horizontal));
-                    cellRecord.LayoutDataCalculatedHorizontal = true;
-                }
-            }
-            else
-            {
-                if (!cellRecord.LayoutDataCalculatedVertical)
-                {
-                    cellRecord.LayoutData.SetHeight(PrecalculateCellLayoutData(cellRecord, LayoutAxis.Vertical));
-                    cellRecord.LayoutDataCalculatedVertical = true;
-                }
+                cellRecord.LayoutData.SetDimensions(PrecalculateCellLayoutData(cellRecord, axis), axis);
             }
 
             float minSize = RecyclerUtil.GetMinSize(cellRecord.LayoutData, (int)axis);

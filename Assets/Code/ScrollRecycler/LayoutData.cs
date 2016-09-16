@@ -14,34 +14,65 @@ public class LayoutData : ILayoutElement
     public float preferredHeight { get { return _PreferredHeight; } set { _PreferredHeight = value; } }
     public float preferredWidth { get { return _PreferredWidth; } set { _PreferredWidth = value; } }
 
-    [SerializeField] private float _MinWidth;
-    [SerializeField] private float _MinHeight;
-    [SerializeField] private float _PreferredWidth;
-    [SerializeField] private float _PreferredHeight;
-    [SerializeField] private float _FlexibleWidth;
-    [SerializeField] private float _FlexibleHeight;
-    [SerializeField] private int _LayoutPriority;
+    [SerializeField]
+    private float _MinWidth;
+    [SerializeField]
+    private float _MinHeight;
+    [SerializeField]
+    private float _PreferredWidth;
+    [SerializeField]
+    private float _PreferredHeight;
+    [SerializeField]
+    private float _FlexibleWidth;
+    [SerializeField]
+    private float _FlexibleHeight;
+    [SerializeField]
+    private int _LayoutPriority;
+
+    [NonSerialized]
+    public bool LayoutDataCalculatedHorizontal;
+    [NonSerialized]
+    public bool LayoutDataCalculatedVertical;
 
     public LayoutData(
-        LayoutDimensions layoutWidth = default(LayoutDimensions), 
+        LayoutDimensions layoutWidth = default(LayoutDimensions),
         LayoutDimensions layoutHeight = default(LayoutDimensions))
     {
         SetWidth(layoutWidth);
         SetHeight(layoutHeight);
     }
 
-    public void SetWidth(LayoutDimensions widthDims)
+    public void SetDimensions(LayoutDimensions dims, LayoutAxis axis)
     {
-        minWidth = widthDims.Min;
-        preferredWidth = widthDims.Preferred;
-        flexibleWidth = widthDims.Flexible;
+        if (axis == LayoutAxis.Horizontal)
+        {
+            if (!LayoutDataCalculatedHorizontal)
+            {
+                SetWidth(dims);
+                LayoutDataCalculatedHorizontal = true;
+            }
+        }
+        else
+        {
+            if (!LayoutDataCalculatedVertical)
+            {
+                SetHeight(dims);
+                LayoutDataCalculatedVertical = true;
+            }
+        }
     }
 
-    public void SetHeight(LayoutDimensions heightDims)
+    void SetWidth(LayoutDimensions dims)
     {
-        minHeight = heightDims.Min;
-        preferredHeight = heightDims.Preferred;
-        flexibleHeight = heightDims.Flexible;
+        minWidth = dims.Min;
+        preferredWidth = dims.Preferred;
+        flexibleWidth = dims.Flexible;
+    }
+    void SetHeight(LayoutDimensions dims)
+    {
+        minHeight = dims.Min;
+        preferredHeight = dims.Preferred;
+        flexibleHeight = dims.Flexible;
     }
 
     public void CalculateLayoutInputHorizontal()
