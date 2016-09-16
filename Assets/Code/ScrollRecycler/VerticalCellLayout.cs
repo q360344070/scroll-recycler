@@ -5,6 +5,8 @@ namespace UnityEngine.UI
 {
     public class VerticalCellLayout : VerticalLayoutGroup, ICellLayout
     {
+        [ReadOnly] public LayoutInput LayoutInput;
+
         public HorizontalOrVerticalCellLayout CellLayout;
 
         bool NeedsUnityLayout;
@@ -62,28 +64,32 @@ namespace UnityEngine.UI
 
         void ManualCalculateLayoutInputHorizontal()
         {
-            CalculateCellLayoutInput(0, true);
+            LayoutInput.Width = CellLayout.GetLayoutDimensions(LayoutAxis.Horizontal);
+            SetLayoutInputForAxis(
+                LayoutInput.Width.Min, 
+                LayoutInput.Width.Preferred, 
+                LayoutInput.Width.Flexible, 
+                (int)LayoutAxis.Horizontal);
         }
 
         void ManualSetLayoutHorizontal()
         {
-            CellLayout.SetAllCellsDimensions(LayoutAxis.Horizontal);
+            CellLayout.SetCellsDimensions(LayoutAxis.Horizontal);
         }
 
         void ManualCalculateLayoutInputVertical()
         {
-            CalculateCellLayoutInput(LayoutAxis.Vertical, true);
+            LayoutInput.Height = CellLayout.GetLayoutDimensions(LayoutAxis.Vertical);
+            SetLayoutInputForAxis(
+                LayoutInput.Height.Min, 
+                LayoutInput.Height.Preferred,
+                LayoutInput.Height.Flexible, 
+                (int)LayoutAxis.Vertical);
         }
 
         void ManualSetLayoutVertical()
         {
-            CellLayout.SetAllCellsDimensions(LayoutAxis.Vertical);
-        }
-
-        void CalculateCellLayoutInput(LayoutAxis axis, bool isVertical)
-        {
-            LayoutDimensions layoutDims = CellLayout.SetLayoutInput(axis);
-            SetLayoutInputForAxis(layoutDims.Min, layoutDims.Preferred, layoutDims.Flexible, (int)axis);
+            CellLayout.SetCellsDimensions(LayoutAxis.Vertical);
         }
     }
 }

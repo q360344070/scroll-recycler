@@ -30,9 +30,9 @@ public class LayoutData : ILayoutElement
     private int _LayoutPriority;
 
     [NonSerialized]
-    public bool LayoutDataCalculatedHorizontal;
+    public bool DimensionsHorizontalSet;
     [NonSerialized]
-    public bool LayoutDataCalculatedVertical;
+    public bool DimensionsVerticalSet;
 
     public LayoutData(
         LayoutDimensions layoutWidth = default(LayoutDimensions),
@@ -46,18 +46,18 @@ public class LayoutData : ILayoutElement
     {
         if (axis == LayoutAxis.Horizontal)
         {
-            if (!LayoutDataCalculatedHorizontal)
+            if (!DimensionsHorizontalSet)
             {
                 SetWidth(dims);
-                LayoutDataCalculatedHorizontal = true;
+                DimensionsHorizontalSet = true;
             }
         }
         else
         {
-            if (!LayoutDataCalculatedVertical)
+            if (!DimensionsVerticalSet)
             {
                 SetHeight(dims);
-                LayoutDataCalculatedVertical = true;
+                DimensionsVerticalSet = true;
             }
         }
     }
