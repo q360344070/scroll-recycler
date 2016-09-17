@@ -9,8 +9,6 @@ namespace UnityEngine.UI
 
         public HorizontalOrVerticalCellLayout CellLayout;
 
-        bool NeedsUnityLayout;
-
         CellLayout ICellLayout.CellLayout { get { return CellLayout; } }
         LayoutGroup ICellLayout.LayoutGroup { get { return this; } }
 
@@ -23,34 +21,18 @@ namespace UnityEngine.UI
         // ============ Automatic Layout system functions (Unity) ============
         public override void CalculateLayoutInputHorizontal()
         {
-            if (NeedsUnityLayout)
-            {
-                ManualCalculateLayoutInputHorizontal();
-            }
         }
 
         public override void SetLayoutHorizontal()
         {
-            if (NeedsUnityLayout)
-            {
-                ManualSetLayoutHorizontal();
-            }
         }
 
         public override void CalculateLayoutInputVertical()
         {
-            if (NeedsUnityLayout)
-            {
-                ManualCalculateLayoutInputVertical();
-            }
         }
 
         public override void SetLayoutVertical()
         {
-            if (NeedsUnityLayout)
-            {
-                ManualSetLayoutVertical();
-            }
         }
 
         // =========== Manual Layout functions ===========
@@ -60,6 +42,17 @@ namespace UnityEngine.UI
             ManualSetLayoutHorizontal();
             ManualCalculateLayoutInputVertical();
             ManualSetLayoutVertical();
+
+            Action<string> dbgPrint = (string msg) => Debug.Log(string.Format("{0}Layout Input: width = {1} height = {2}", msg, LayoutInput.Width, LayoutInput.Height));
+            //dbgPrint("First Pass: ");
+
+            // #donotcommit
+            //ManualCalculateLayoutInputHorizontal();
+            //ManualSetLayoutHorizontal();
+            //ManualCalculateLayoutInputVertical();
+            //ManualSetLayoutVertical();
+
+            //dbgPrint("Second Pass: ");
         }
 
         void ManualCalculateLayoutInputHorizontal()

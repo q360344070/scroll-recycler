@@ -46,19 +46,19 @@ public class LayoutData : ILayoutElement
     {
         if (axis == LayoutAxis.Horizontal)
         {
-            if (!DimensionsHorizontalSet)
-            {
+            //if (!DimensionsHorizontalSet)
+            //{
                 SetWidth(dims);
                 DimensionsHorizontalSet = true;
-            }
+            //}
         }
         else
         {
-            if (!DimensionsVerticalSet)
-            {
+            //if (!DimensionsVerticalSet)
+            //{
                 SetHeight(dims);
                 DimensionsVerticalSet = true;
-            }
+            //}
         }
     }
 
@@ -68,6 +68,7 @@ public class LayoutData : ILayoutElement
         preferredWidth = dims.Preferred;
         flexibleWidth = dims.Flexible;
     }
+
     void SetHeight(LayoutDimensions dims)
     {
         minHeight = dims.Min;
@@ -109,6 +110,11 @@ public struct LayoutDimensions
     public float Min;
     public float Preferred;
     public float Flexible;
+
+    public override string ToString()
+    {
+        return "[Min = " + Min + ", Preferred = " + Preferred + ", Flexible = " + Flexible + "]";
+    }
 }
 
 public struct LayoutInput
