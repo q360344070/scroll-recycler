@@ -249,18 +249,29 @@ public class HorizontalOrVerticalCellLayout : CellLayout
         var iLayout = CellPool.CellProxy.GetComponent<ILayoutElement>();
         Action<string> dbgPrint = (string msg) =>
         {
-            Debug.Log(string.Format("{0} proxyRtx.rect.size = {1} preferredSize = {2} minSize = {3} flexibleSize = {4}", 
-                msg, 
-                proxyRtx.rect.size, 
-                new Vector2(iLayout.preferredWidth, iLayout.preferredHeight),
-                new Vector2(iLayout.minWidth, iLayout.minHeight),
-                new Vector2(iLayout.flexibleWidth, iLayout.flexibleHeight)));
+            //Debug.Log(string.Format("{0} proxyRtx.rect.size = {1} preferredSize = {2} minSize = {3} flexibleSize = {4}", 
+            //    msg, 
+            //    proxyRtx.rect.size, 
+            //    new Vector2(iLayout.preferredWidth, iLayout.preferredHeight),
+            //    new Vector2(iLayout.minWidth, iLayout.minHeight),
+            //    new Vector2(iLayout.flexibleWidth, iLayout.flexibleHeight)));
         };
 
-        PlaceCell(proxyRtx, initialAxis);
-        dbgPrint("Initial Axis: ");
-        PlaceCell(proxyRtx, secondaryAxis);
-        dbgPrint("Secondary Axis: ");
+        Action<string> placeCell = (string message) =>
+        {
+            PlaceCell(proxyRtx, initialAxis);   
+            dbgPrint(message + "Initial Axis: ");
+            PlaceCell(proxyRtx, secondaryAxis);
+            dbgPrint(message + "Secondary Axis: ");
+        };
+
+        placeCell("FIRST FRAME (1): ");
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate(proxyRtx);
+
+        placeCell("FIRST FRAME (2): ");
+
+        CoroutineRunner.WaitForEndOfFrame(() => placeCell("SECOND FRAME: "));
 
         return GetProxyLayoutDimensions(axis);
     }

@@ -64,6 +64,8 @@ public class LayoutData : ILayoutElement
 
     void SetWidth(LayoutDimensions dims)
     {
+        Debug.Log("LayoutData.SetWidth() dims = " + dims); // #donotcommit
+
         minWidth = dims.Min;
         preferredWidth = dims.Preferred;
         flexibleWidth = dims.Flexible;
@@ -71,6 +73,8 @@ public class LayoutData : ILayoutElement
 
     void SetHeight(LayoutDimensions dims)
     {
+        Debug.Log("LayoutData.SetHeight() dims = " + dims); // #donotcommit
+
         minHeight = dims.Min;
         preferredHeight = dims.Preferred;
         flexibleHeight = dims.Flexible;
