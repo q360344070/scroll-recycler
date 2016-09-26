@@ -10,7 +10,7 @@ public class Startup
 
         // write FPS to "profilerLog.txt"
         // persistentDataPath, because dataPath seems to be readOnly under iOS
-        Profiler.logFile = "profilerLog.txt";
+        Profiler.logFile = "Assets/profilerLog.txt";
         // write Profiler Data to "profilerLog.txt.data"                                                                                        
         Profiler.enableBinaryLog = true;
         Profiler.enabled = true;

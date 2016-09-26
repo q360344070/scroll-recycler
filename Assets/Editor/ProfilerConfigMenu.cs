@@ -5,7 +5,8 @@ using System.IO;
 
 public class ProfilerUI : EditorWindow
 {
-    string Filename;
+    string LoadFileName;
+    string WriteFileName;
 
     [MenuItem("User/ProfilerUI")]
     static void Launch()
@@ -16,25 +17,30 @@ public class ProfilerUI : EditorWindow
 
     public void OnGUI()
     {
-        Filename = EditorGUILayout.TextField("Item Name", Filename);
-        string fullPath = Application.dataPath + "/" + Filename;
+        //string pathToAssetsFolder = UnityEngine.Application.dataPath;
+        //pathToAssetsFolder = pathToAssetsFolder.Replace("/", "\\");
 
-        if (GUILayout.Button("Load Profiled Data"))
-        {
-            if (File.Exists(Filename))
-            {
-                Profiler.AddFramesFromFile(Filename);
-            }
-            else
-            {
-                Debug.Log("Could not find profile data at path: " + fullPath);
-            }
-        }
 
-        // #donotcommit
-        if (GUILayout.Button("Print Filename Path"))
-        {
-            Debug.Log(Application.dataPath + "/" + Filename);
-        }
+        //LoadFileName = EditorGUILayout.TextField("File Name", LoadFileName);
+        //string fullPath = Application.dataPath + "/" + LoadFileName;
+
+        //if (GUILayout.Button("Load Profiled Data"))
+        //{
+        //    if (File.Exists(LoadFileName))
+        //    {
+        //        Profiler.AddFramesFromFile(LoadFileName);
+        //    }
+        //    else
+        //    {
+        //        Debug.Log("Could not find profile data at path: " + fullPath);
+        //    }
+        //}
+
+        //WriteFileName = EditorGUILayout.TextField("File Name", WriteFileName);
+        //if (GUILayout.Button("Save Profiler Data"))
+        //{
+        //    FileUtil.CopyFileOrDirectory(pathToAssetsFolder + "\\profilerLog.txt", pathToAssetsFolder + "\\" + WriteFileName);
+        //    FileUtil.CopyFileOrDirectory(pathToAssetsFolder + "\\profilerLog.txt.data", pathToAssetsFolder + "\\" + WriteFileName);
+        //}
     }
 }
