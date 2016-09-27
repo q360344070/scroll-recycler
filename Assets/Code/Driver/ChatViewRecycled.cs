@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class ChatView : MonoBehaviour
+public class ChatViewRecycled : MonoBehaviour
 {
     public ScrollRecycler ScrollRecycler;
     public GameObject ChatSectionPrefab;

@@ -601,7 +601,7 @@ namespace UnityEngine.UI
             }
         }
 
-        protected ScrollRect()
+        protected ScrollRectForked()
         {
         }
 
@@ -827,11 +827,11 @@ namespace UnityEngine.UI
             {
                 if (b2.x != 0f)
                 {
-                    vector.x -= ScrollRect.RubberDelta(b2.x, this.m_ViewBounds.size.x);
+                    vector.x -= ScrollRectForked.RubberDelta(b2.x, this.m_ViewBounds.size.x);
                 }
                 if (b2.y != 0f)
                 {
-                    vector.y -= ScrollRect.RubberDelta(b2.y, this.m_ViewBounds.size.y);
+                    vector.y -= ScrollRectForked.RubberDelta(b2.y, this.m_ViewBounds.size.y);
                 }
             }
             this.SetContentAnchoredPosition(vector);
@@ -1219,16 +1219,6 @@ namespace UnityEngine.UI
         protected override void OnValidate()
         {
             this.SetDirtyCaching();
-        }
-
-        virtual bool IsDestroyed()
-        {
-            return base.IsDestroyed();
-        }
-
-        virtual Transform get_transform()
-        {
-            return base.transform;
         }
     }
 }
