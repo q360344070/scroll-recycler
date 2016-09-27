@@ -6,7 +6,7 @@ public class ChatViewForked : MonoBehaviour
 {
     public ScrollRectForked ScrollRect;
 
-    int CellCount = 1000;
+    int CellCount = 300;
 
     void Start()
     {

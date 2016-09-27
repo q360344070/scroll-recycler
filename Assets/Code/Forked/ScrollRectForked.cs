@@ -698,10 +698,10 @@ namespace UnityEngine.UI
 
         private void EnsureLayoutHasRebuilt()
         {
-            if (!this.m_HasRebuiltLayout && !CanvasUpdateRegistry.IsRebuildingLayout())
-            {
-                Canvas.ForceUpdateCanvases();
-            }
+            //if (!this.m_HasRebuiltLayout && !CanvasUpdateRegistry.IsRebuildingLayout())
+            //{
+            //    Canvas.ForceUpdateCanvases();
+            //}
         }
 
         /// <summary>
